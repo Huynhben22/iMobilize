@@ -32,58 +32,68 @@ A comprehensive mobile/web application aimed at facilitating social/civic activi
 - npm (v6 or higher)
 - Expo CLI (for mobile development)
 
-### Example project structure for now:
-imobilize-mobile/
-├── App.js                         # Entry point
-├── app.json                       # Expo configuration
-├── babel.config.js                # Babel configuration
-├── package.json                   # Dependencies
-├── assets/
-│   ├── images/
-│   │   └── logo.png               # App logo
-│   └── fonts/                     # Custom fonts
-├── src/
-│   ├── components/
-│   │   ├── common/                # Common UI components
-│   │   │   ├── Button.js
-│   │   │   ├── Card.js
-│   │   │   └── Header.js
-│   │   ├── auth/                  # Authentication components
-│   │   │   ├── LoginForm.js
-│   │   │   └── RegisterForm.js
-│   │   └── dashboard/             # Dashboard components
-│   │       ├── DashboardStats.js
-│   │       ├── EventCard.js
-│   │       └── ActivistFeed.js
-│   ├── screens/
-│   │   ├── onboarding/
-│   │   │   ├── SplashScreen.js    # Initial splash screen
-│   │   │   ├── TermsScreen.js     # Terms of service screen
-│   │   │   └── WelcomeScreen.js   # Welcome introduction
-│   │   ├── auth/
-│   │   │   ├── LoginScreen.js     # Login screen
-│   │   │   └── RegisterScreen.js  # Registration screen
-│   │   └── main/
-│   │       ├── HomeScreen.js      # Dashboard/home screen
-│   │       ├── ResourcesScreen.js # Educational resources
-│   │       ├── CommunityScreen.js # Community features
-│   │       ├── OrganizerScreen.js # Event organization
-│   │       └── ProfileScreen.js   # User profile
-│   ├── navigation/
-│   │   ├── AppNavigator.js        # Main navigator (handles auth state)
-│   │   ├── AuthNavigator.js       # Authentication flow
-│   │   ├── MainNavigator.js       # Main app tabs
-│   │   └── OnboardingNavigator.js # Onboarding flow (ToS)
-│   ├── context/
-│   │   ├── AuthContext.js         # Auth state management
-│   │   └── OnboardingContext.js   # Tracks ToS acceptance
-│   ├── services/
-│   │   ├── api.js                 # API configuration
-│   │   └── storage.js             # Local storage utilities
-│   ├── utils/
-│   │   ├── constants.js           # App constants
-│   │   └── validation.js          # Form validation
-│   └── data/
-│       ├── mockEvents.js          # Mock event data for development
-│       └── termsOfService.js      # ToS content
-└── .gitignore                     # Git ignore file
+# imobilize-mobile
+
+## Project Structure
+
+- **App.js** - Entry point
+- **app.json** - Expo configuration
+- **babel.config.js** - Babel configuration
+- **package.json** - Dependencies
+- **.gitignore** - Git ignore file
+
+### assets/
+- **images/**
+  - logo.png - App logo
+- **fonts/** - Custom fonts
+
+### src/
+#### components/
+- **common/** - Common UI components
+  - Button.js
+  - Card.js
+  - Header.js
+- **auth/** - Authentication components
+  - LoginForm.js
+  - RegisterForm.js
+- **dashboard/** - Dashboard components
+  - DashboardStats.js
+  - EventCard.js
+  - ActivistFeed.js
+
+#### screens/
+- **onboarding/**
+  - SplashScreen.js - Initial splash screen
+  - TermsScreen.js - Terms of service screen
+  - WelcomeScreen.js - Welcome introduction
+- **auth/**
+  - LoginScreen.js - Login screen
+  - RegisterScreen.js - Registration screen
+- **main/**
+  - HomeScreen.js - Dashboard/home screen
+  - ResourcesScreen.js - Educational resources
+  - CommunityScreen.js - Community features
+  - OrganizerScreen.js - Event organization
+  - ProfileScreen.js - User profile
+
+#### navigation/
+- AppNavigator.js - Main navigator (handles auth state)
+- AuthNavigator.js - Authentication flow
+- MainNavigator.js - Main app tabs
+- OnboardingNavigator.js - Onboarding flow (ToS)
+
+#### context/
+- AuthContext.js - Auth state management
+- OnboardingContext.js - Tracks ToS acceptance
+
+#### services/
+- api.js - API configuration
+- storage.js - Local storage utilities
+
+#### utils/
+- constants.js - App constants
+- validation.js - Form validation
+
+#### data/
+- mockEvents.js - Mock event data for development
+- termsOfService.js - ToS content

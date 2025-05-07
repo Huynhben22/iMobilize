@@ -75,4 +75,15 @@ imobilize-mobile/
 │   │   ├── MainNavigator.js       # Main app tabs
 │   │   └── OnboardingNavigator.js # Onboarding flow (ToS)
 │   ├── context/
-│   │   ├── AuthContext.js         #
+│   │   ├── AuthContext.js         # Auth state management
+│   │   └── OnboardingContext.js   # Tracks ToS acceptance
+│   ├── services/
+│   │   ├── api.js                 # API configuration
+│   │   └── storage.js             # Local storage utilities
+│   ├── utils/
+│   │   ├── constants.js           # App constants
+│   │   └── validation.js          # Form validation
+│   └── data/
+│       ├── mockEvents.js          # Mock event data for development
+│       └── termsOfService.js      # ToS content
+└── .gitignore                     # Git ignore file

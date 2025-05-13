@@ -32,68 +32,31 @@ A comprehensive mobile/web application aimed at facilitating social/civic activi
 - npm (v6 or higher)
 - Expo CLI (for mobile development)
 
-# imobilize-mobile
+## Installation & Setup
 
-## Project Structure
+1. Clone the repository
+```bash
+git clone https://github.com/Huynhben22/iMobilize.git
+cd iMobilize/iMobilize-js
 
-- **App.js** - Entry point
-- **app.json** - Expo configuration
-- **babel.config.js** - Babel configuration
-- **package.json** - Dependencies
-- **.gitignore** - Git ignore file
+2. Install Dependencies
+```bash
+npm install
 
-### assets/
-- **images/**
-  - logo.png - App logo
-- **fonts/** - Custom fonts
+3. Install Web Dependencies
+```bash
+npx expo install react-dom react-native-web @expo/metro-runtime
 
-### src/
-#### components/
-- **common/** - Common UI components
-  - Button.js
-  - Card.js
-  - Header.js
-- **auth/** - Authentication components
-  - LoginForm.js
-  - RegisterForm.js
-- **dashboard/** - Dashboard components
-  - DashboardStats.js
-  - EventCard.js
-  - ActivistFeed.js
+4. start it
+```bash
+npm start
 
-#### screens/
-- **onboarding/**
-  - SplashScreen.js - Initial splash screen
-  - TermsScreen.js - Terms of service screen
-  - WelcomeScreen.js - Welcome introduction
-- **auth/**
-  - LoginScreen.js - Login screen
-  - RegisterScreen.js - Registration screen
-- **main/**
-  - HomeScreen.js - Dashboard/home screen
-  - ResourcesScreen.js - Educational resources
-  - CommunityScreen.js - Community features
-  - OrganizerScreen.js - Event organization
-  - ProfileScreen.js - User profile
+5.View the app using one of these methods:
 
-#### navigation/
-- AppNavigator.js - Main navigator (handles auth state)
-- AuthNavigator.js - Authentication flow
-- MainNavigator.js - Main app tabs
-- OnboardingNavigator.js - Onboarding flow (ToS)
+Scan the QR code with Expo Go app on your mobile device
+Press w to open in a web browser
+Press a to open on Android (requires Android SDK setup)
+Press i to open on iOS (requires macOS and Xcode)
 
-#### context/
-- AuthContext.js - Auth state management
-- OnboardingContext.js - Tracks ToS acceptance
 
-#### services/
-- api.js - API configuration
-- storage.js - Local storage utilities
 
-#### utils/
-- constants.js - App constants
-- validation.js - Form validation
-
-#### data/
-- mockEvents.js - Mock event data for development
-- termsOfService.js - ToS content

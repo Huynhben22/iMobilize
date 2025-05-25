@@ -5,13 +5,9 @@ import { View, Text } from 'react-native';
 
 // Import screens
 import HomeScreen from '../screens/main/HomeScreen';
+import ResourcesScreen from '../screens/main/ResourcesScreen';
 
 // Placeholder components for screens we haven't built yet
-const ResourcesScreen = () => (
-  <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-    <Text>Resources</Text>
-  </View>
-);
 
 const CommunityScreen = () => (
   <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>

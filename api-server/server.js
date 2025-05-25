@@ -7,101 +7,259 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 
+// Import database configuration
+const { 
+  initializeDatabases, 
+  closeDatabaseConnections, 
+  pgPool, 
+  mongoDB 
+} = require('./config/database');
+
 // Create Express app
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware Setup
-console.log('Setting up middleware...');
+console.log('⚙️  Setting up middleware...');
 
 // Security middleware
-app.use(helmet()); // Adds security headers
-console.log('✓ Helmet security headers enabled');
+app.use(helmet());
+console.log('✅ Helmet security headers enabled');
 
-// CORS middleware (allows your mobile app to connect)
-app.use(cors({
+// CORS middleware
+const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
     ? ['https://yourdomain.com'] 
-    : ['http://localhost:19006', 'http://localhost:19000'], // Expo default ports
+    : ['http://localhost:19006', 'http://localhost:19000', 'http://localhost:3000'],
   credentials: true
-}));
-console.log('✓ CORS enabled');
+};
+app.use(cors(corsOptions));
+console.log('✅ CORS enabled');
 
-// Parse JSON bodies (so we can receive JSON from mobile app)
+// Parse JSON bodies
 app.use(express.json({ limit: '10mb' }));
-console.log('✓ JSON parser enabled');
+app.use(express.urlencoded({ extended: true }));
+console.log('✅ JSON parser enabled');
 
-// Rate limiting (prevent spam)
+// Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
   message: {
     error: 'Too many requests from this IP, please try again later.'
-  }
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 app.use(limiter);
-console.log('✓ Rate limiting enabled');
+console.log('✅ Rate limiting enabled');
 
 // Basic Routes
 app.get('/', (req, res) => {
   res.json({ 
-    message: 'iMobilize API Server is running!',
+    message: '🚀 iMobilize API Server is running!',
     version: '1.0.0',
-    timestamp: new Date().toISOString()
-  });
-});
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
     timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    databases: {
+      postgresql: '✅ Connected',
+      mongodb: '✅ Connected'
+    },
+    endpoints: {
+      health: '/health',
+      test: '/api/test',
+      postgresql_test: '/api/test/postgresql',
+      mongodb_test: '/api/test/mongodb'
+    }
   });
 });
 
-// Test route to make sure everything works
+// Health check endpoint with database status
+app.get('/health', async (req, res) => {
+  try {
+    // Test PostgreSQL
+    const pgClient = await pgPool.connect();
+    const pgResult = await pgClient.query('SELECT NOW() as current_time, current_database() as db_name');
+    pgClient.release();
+    
+    // Test MongoDB
+    await mongoDB.admin().ping();
+    const mongoStats = await mongoDB.stats();
+    
+    res.json({ 
+      status: '✅ Healthy', 
+      timestamp: new Date().toISOString(),
+      uptime: Math.floor(process.uptime()),
+      databases: {
+        postgresql: {
+          status: '✅ Connected',
+          database: pgResult.rows[0].db_name,
+          current_time: pgResult.rows[0].current_time
+        },
+        mongodb: {
+          status: '✅ Connected',
+          database: mongoDB.databaseName,
+          collections: mongoStats.collections || 0,
+          dataSize: mongoStats.dataSize || 0
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Health check failed:', error);
+    res.status(503).json({
+      status: '❌ Unhealthy',
+      timestamp: new Date().toISOString(),
+      error: error.message
+    });
+  }
+});
+
+// API test route
 app.get('/api/test', (req, res) => {
   res.json({
-    message: 'API is working correctly!',
-    environment: process.env.NODE_ENV,
-    timestamp: new Date().toISOString()
+    message: '✅ API is working correctly!',
+    environment: process.env.NODE_ENV || 'development',
+    timestamp: new Date().toISOString(),
+    server: 'iMobilize API v1.0.0'
   });
 });
 
-// 404 handler for undefined routes
-app.use('*', (req, res) => {
+// PostgreSQL test route
+app.get('/api/test/postgresql', async (req, res) => {
+  try {
+    const client = await pgPool.connect();
+    const result = await client.query(`
+      SELECT 
+        current_database() as database_name,
+        current_user as current_user,
+        version() as postgresql_version,
+        NOW() as current_time
+    `);
+    client.release();
+    
+    res.json({
+      status: '✅ PostgreSQL connection successful',
+      data: result.rows[0],
+      connection_info: {
+        host: process.env.PG_HOST,
+        port: process.env.PG_PORT,
+        database: process.env.PG_DATABASE,
+        user: process.env.PG_USER
+      }
+    });
+  } catch (error) {
+    console.error('PostgreSQL test failed:', error);
+    res.status(500).json({
+      status: '❌ PostgreSQL connection failed',
+      error: error.message,
+      code: error.code
+    });
+  }
+});
+
+// MongoDB test route
+app.get('/api/test/mongodb', async (req, res) => {
+  try {
+    // Test connection
+    await mongoDB.admin().ping();
+    
+    // Get database stats
+    const stats = await mongoDB.stats();
+    
+    // List collections
+    const collections = await mongoDB.listCollections().toArray();
+    
+    res.json({
+      status: '✅ MongoDB connection successful',
+      database: mongoDB.databaseName,
+      data: {
+        collections: collections.length,
+        collection_names: collections.map(col => col.name),
+        dataSize: stats.dataSize,
+        indexSize: stats.indexSize,
+        totalSize: stats.totalSize
+      },
+      connection_info: {
+        uri: process.env.MONGO_URI,
+        database: process.env.MONGO_DB_NAME
+      }
+    });
+  } catch (error) {
+    console.error('MongoDB test failed:', error);
+    res.status(500).json({
+      status: '❌ MongoDB connection failed',
+      error: error.message
+    });
+  }
+});
+
+// 404 handler
+app.use((req, res) => {
   res.status(404).json({
-    error: 'Route not found',
-    path: req.originalUrl
+    error: '❌ Route not found',
+    path: req.originalUrl,
+    available_endpoints: [
+      'GET /',
+      'GET /health',
+      'GET /api/test',
+      'GET /api/test/postgresql',
+      'GET /api/test/mongodb'
+    ]
   });
 });
 
 // Global error handler
 app.use((err, req, res, next) => {
-  console.error('Error occurred:', err);
+  console.error('💥 Error occurred:', err);
   res.status(500).json({ 
-    error: 'Internal server error',
+    error: '💥 Internal server error',
     message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
   });
 });
 
-// Start the server
-app.listen(PORT, () => {
-  console.log('\n🚀 iMobilize API Server started successfully!');
-  console.log(`📍 Server running on port ${PORT}`);
-  console.log(`🌐 Local URL: http://localhost:${PORT}`);
-  console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`⏰ Started at: ${new Date().toISOString()}\n`);
-});
+// Start the server with database initialization
+async function startServer() {
+  try {
+    // Initialize database connections
+    await initializeDatabases();
+    
+    // Start HTTP server
+    app.listen(PORT, () => {
+      console.log('\n🎉 iMobilize API Server started successfully!');
+      console.log(`📍 Server running on port ${PORT}`);
+      console.log(`🌐 Local URL: http://localhost:${PORT}`);
+      console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`⏰ Started at: ${new Date().toISOString()}\n`);
+      
+      console.log('📋 Available endpoints:');
+      console.log(`   🏠 GET  /                     - Server status & info`);
+      console.log(`   💗 GET  /health               - Health check with DB status`);
+      console.log(`   🧪 GET  /api/test             - API test`);
+      console.log(`   🐘 GET  /api/test/postgresql  - PostgreSQL connection test`);
+      console.log(`   🍃 GET  /api/test/mongodb     - MongoDB connection test\n`);
+      
+      console.log('🎯 Try visiting: http://localhost:3000');
+      console.log('🎯 Or test health: http://localhost:3000/health\n');
+    });
+    
+  } catch (error) {
+    console.error('\n💥 Failed to start server:', error.message);
+    console.error('🔧 Please check your database configuration and ensure services are running.\n');
+    process.exit(1);
+  }
+}
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
   console.log('\n🛑 Shutting down server gracefully...');
+  await closeDatabaseConnections();
   process.exit(0);
 });
 
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   console.log('\n🛑 Shutting down server gracefully...');
+  await closeDatabaseConnections();
   process.exit(0);
 });
+
+// Start the server
+startServer();

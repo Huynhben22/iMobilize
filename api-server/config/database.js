@@ -102,6 +102,14 @@ async function initializeDatabases() {
   }
 }
 
+// Function to get MongoDB instance (helper for other modules)
+function getMongoDatabase() {
+  if (!mongoDB) {
+    throw new Error('MongoDB not initialized. Call initializeDatabases() first.');
+  }
+  return mongoDB;
+}
+
 // Graceful shutdown
 async function closeDatabaseConnections() {
   console.log('\n🔌 Closing database connections...');
@@ -125,7 +133,9 @@ async function closeDatabaseConnections() {
 
 module.exports = {
   pgPool,
-  mongoDB,
+  get mongoDB() {
+    return mongoDB;
+  },
   initializeDatabases,
   closeDatabaseConnections,
   testPostgreSQLConnection,

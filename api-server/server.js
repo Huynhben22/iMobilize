@@ -8,12 +8,15 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 
 // Import database configuration
+const dbConfig = require('./config/database');
 const { 
   initializeDatabases, 
   closeDatabaseConnections, 
-  pgPool, 
-  mongoDB 
-} = require('./config/database');
+  pgPool
+} = dbConfig;
+
+// Import routes
+const authRoutes = require('./routes/auth');
 
 // Create Express app
 const app = express();
@@ -54,6 +57,9 @@ const limiter = rateLimit({
 app.use(limiter);
 console.log('✅ Rate limiting enabled');
 
+// Routes
+app.use('/api/auth', authRoutes);
+
 // Basic Routes
 app.get('/', (req, res) => {
   res.json({ 
@@ -82,8 +88,13 @@ app.get('/health', async (req, res) => {
     pgClient.release();
     
     // Test MongoDB
-    await mongoDB.admin().ping();
-    const mongoStats = await mongoDB.stats();
+    const mongoDatabase = dbConfig.mongoDB;
+    if (!mongoDatabase) {
+      throw new Error('MongoDB not initialized');
+    }
+    
+    await mongoDatabase.admin().ping();
+    const mongoStats = await mongoDatabase.stats();
     
     res.json({ 
       status: '✅ Healthy', 
@@ -97,7 +108,7 @@ app.get('/health', async (req, res) => {
         },
         mongodb: {
           status: '✅ Connected',
-          database: mongoDB.databaseName,
+          database: mongoDatabase.databaseName,
           collections: mongoStats.collections || 0,
           dataSize: mongoStats.dataSize || 0
         }
@@ -159,18 +170,21 @@ app.get('/api/test/postgresql', async (req, res) => {
 // MongoDB test route
 app.get('/api/test/mongodb', async (req, res) => {
   try {
+    // Get MongoDB instance
+    const { mongoDB: mongoDatabase } = require('./config/database');
+    
     // Test connection
-    await mongoDB.admin().ping();
+    await mongoDatabase.admin().ping();
     
     // Get database stats
-    const stats = await mongoDB.stats();
+    const stats = await mongoDatabase.stats();
     
     // List collections
-    const collections = await mongoDB.listCollections().toArray();
+    const collections = await mongoDatabase.listCollections().toArray();
     
     res.json({
       status: '✅ MongoDB connection successful',
-      database: mongoDB.databaseName,
+      database: mongoDatabase.databaseName,
       data: {
         collections: collections.length,
         collection_names: collections.map(col => col.name),
@@ -235,7 +249,10 @@ async function startServer() {
       console.log(`   💗 GET  /health               - Health check with DB status`);
       console.log(`   🧪 GET  /api/test             - API test`);
       console.log(`   🐘 GET  /api/test/postgresql  - PostgreSQL connection test`);
-      console.log(`   🍃 GET  /api/test/mongodb     - MongoDB connection test\n`);
+      console.log(`   🍃 GET  /api/test/mongodb     - MongoDB connection test`);
+      console.log(`   🔐 POST /api/auth/register    - User registration (placeholder)`);
+      console.log(`   🔐 POST /api/auth/login       - User login (placeholder)`);
+      console.log(`   🔐 GET  /api/auth/verify      - Token verification (placeholder)\n`);
       
       console.log('🎯 Try visiting: http://localhost:3000');
       console.log('🎯 Or test health: http://localhost:3000/health\n');

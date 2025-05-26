@@ -1,64 +1,106 @@
 // middleware/auth.js
-// TODO: Authentication middleware to be implemented by security team member
-//
-// This file should include:
-// - authenticateToken - Verify JWT tokens
-// - requireRole - Check user roles/permissions
-// - requireAdmin - Admin-only access
-// - requireModerator - Moderator+ access
-// - optionalAuth - Optional authentication for public routes
-// - rateLimitAuth - Rate limiting for auth endpoints
-// - validateInput - Input validation middleware
-//
-// Security considerations:
-// - JWT token verification and validation
-// - Role-based access control (RBAC)
-// - Session management
-// - Request rate limiting
-// - Input sanitization
-// - CSRF token validation (if needed)
-// - Secure headers
+const jwt = require('jsonwebtoken');
+const { getPostgreSQLPool } = require('../config/database');
 
-// Placeholder middleware - to be implemented
-const authenticateToken = (req, res, next) => {
-  // TODO: Implement JWT token authentication
-  res.status(501).json({
-    message: 'Authentication middleware under development',
-    middleware: 'authenticateToken',
-    status: 'not_implemented'
-  });
+/**
+ * Middleware to verify JWT tokens
+ */
+const verifyToken = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader) {
+      return res.status(401).json({
+        success: false,
+        message: 'Access token required',
+        error: 'MISSING_TOKEN'
+      });
+    }
+
+    // Extract token from "Bearer TOKEN"
+    const token = authHeader.split(' ')[1];
+    
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token format',
+        error: 'INVALID_TOKEN_FORMAT'
+      });
+    }
+
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // ✅ USE HELPER FUNCTION INSTEAD OF DECLARING NEW POOL
+    const pool = getPostgreSQLPool();
+    const result = await pool.query(
+      'SELECT id, username, email, role, privacy_level FROM users WHERE id = $1',
+      [decoded.userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({
+        success: false,
+        message: 'User not found',
+        error: 'USER_NOT_FOUND'
+      });
+    }
+
+    // Add user info to request
+    req.user = result.rows[0];
+    next();
+  } catch (error) {
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token',
+        error: 'INVALID_TOKEN'
+      });
+    }
+    
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        success: false,
+        message: 'Token expired',
+        error: 'TOKEN_EXPIRED'
+      });
+    }
+
+    console.error('Auth middleware error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Authentication error',
+      error: 'AUTH_ERROR'
+    });
+  }
 };
 
+/**
+ * Middleware to check user roles
+ */
 const requireRole = (roles) => {
   return (req, res, next) => {
-    // TODO: Implement role-based access control
-    res.status(501).json({
-      message: 'Role-based access control under development',
-      middleware: 'requireRole',
-      required_roles: roles,
-      status: 'not_implemented'
-    });
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required',
+        error: 'AUTH_REQUIRED'
+      });
+    }
+
+    if (roles.includes(req.user.role)) {
+      next();
+    } else {
+      res.status(403).json({
+        success: false,
+        message: 'Insufficient permissions',
+        error: 'INSUFFICIENT_PERMISSIONS'
+      });
+    }
   };
 };
 
-const requireAdmin = (req, res, next) => {
-  // TODO: Implement admin access control
-  res.status(501).json({
-    message: 'Admin access control under development',
-    middleware: 'requireAdmin',
-    status: 'not_implemented'
-  });
-};
-
-const optionalAuth = (req, res, next) => {
-  // TODO: Implement optional authentication
-  req.user = null; // Placeholder - set user if authenticated, null if not
-  next();
-};
-
 module.exports = {
-  authenticateToken,
-  requireRole,
-  requireAdmin,
-  optionalAuth
+  verifyToken,
+  requireRole
 };

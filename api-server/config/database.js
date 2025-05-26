@@ -52,10 +52,19 @@ async function testPostgreSQLConnection() {
     console.log('✅ PostgreSQL connected successfully');
     console.log(`   Database: ${result.rows[0].database_name}`);
     console.log(`   Time: ${result.rows[0].current_time}`);
-    return true;
+    
+    // Return structured response for health checks
+    return {
+      status: '✅ Connected',
+      database: result.rows[0].database_name,
+      current_time: result.rows[0].current_time
+    };
   } catch (error) {
     console.error('❌ PostgreSQL connection failed:', error.message);
-    throw error;
+    return {
+      status: '❌ Connection Failed',
+      error: error.message
+    };
   }
 }
 
@@ -68,13 +77,24 @@ async function testMongoDBConnection() {
     
     console.log('🔌 Testing MongoDB connection...');
     await mongoDB.admin().ping();
+    const stats = await mongoDB.stats();
     
     console.log('✅ MongoDB connection test successful');
     console.log(`   Database: ${mongoDB.databaseName}`);
-    return true;
+    
+    // Return structured response for health checks
+    return {
+      status: '✅ Connected',
+      database: mongoDB.databaseName,
+      collections: stats.collections,
+      dataSize: stats.dataSize
+    };
   } catch (error) {
     console.error('❌ MongoDB connection test failed:', error.message);
-    throw error;
+    return {
+      status: '❌ Connection Failed',
+      error: error.message
+    };
   }
 }
 
@@ -100,6 +120,14 @@ async function initializeDatabases() {
     console.error('Please check your database configuration and ensure services are running.\n');
     throw error;
   }
+}
+
+// Helper function to get PostgreSQL pool (prevents redeclaration issues)
+function getPostgreSQLPool() {
+  if (!pgPool) {
+    throw new Error('PostgreSQL pool not initialized. Call initializeDatabases() first.');
+  }
+  return pgPool;
 }
 
 // Function to get MongoDB instance (helper for other modules)
@@ -136,6 +164,8 @@ module.exports = {
   get mongoDB() {
     return mongoDB;
   },
+  getPostgreSQLPool,
+  getMongoDatabase,
   initializeDatabases,
   closeDatabaseConnections,
   testPostgreSQLConnection,

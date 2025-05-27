@@ -5,31 +5,14 @@ import { View, Text } from 'react-native';
 
 // Import screens
 import HomeScreen from '../screens/main/HomeScreen';
+import AuthScreen from '../screens/main/AuthScreen';
 
-// Placeholder components for screens we haven't built yet
-const ResourcesScreen = () => (
-  <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-    <Text>Resources</Text>
-  </View>
-);
+import CommunityScreen from '../screens/main/CommunityScreen'
 
-const CommunityScreen = () => (
-  <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-    <Text>Community</Text>
-  </View>
-);
+import ResourcesScreen from '../screens/main/ResourcesScreen';
+import OrganizerScreen from '../screens/main/OrganizerScreen';
 
-const OrganizerScreen = () => (
-  <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-    <Text>Organizer</Text>
-  </View>
-);
-
-const ProfileScreen = () => (
-  <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-    <Text>Profile</Text>
-  </View>
-);
+import ProfileScreen from '../screens/main/ProfileScreen'
 
 const Tab = createBottomTabNavigator();
 
@@ -70,4 +53,4 @@ const MainNavigator = () => {
   );
 };
 
-export default MainNavigator;
+export default MainNavigator; MainNavigator;

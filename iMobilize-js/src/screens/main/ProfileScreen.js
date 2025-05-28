@@ -7,9 +7,9 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Switch,
-  TextInput
+  TextInput,
 } from 'react-native';
-import { User, MapPin, Edit, ArrowLeft } from 'lucide-react';
+import { Ionicons } from '@expo/vector-icons';
 
 const ProfileScreen = ({ navigation }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -26,7 +26,7 @@ const ProfileScreen = ({ navigation }) => {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.navigate('Home')}>
-          <ArrowLeft size={20} color="#fff" />
+          <Ionicons name="arrow-back-outline" size={20} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Profile</Text>
       </View>
@@ -36,17 +36,17 @@ const ProfileScreen = ({ navigation }) => {
         <View style={styles.card}>
           <View style={styles.profileTop}>
             <View style={styles.avatarBox}>
-              <User size={32} color="#5B5FEF" />
+              <Ionicons name="person" size={32} color="#5B5FEF" />
             </View>
             <View style={styles.profileDetails}>
               <Text style={styles.name}>{profile.name}</Text>
               <Text style={styles.username}>{profile.username}</Text>
               <Text style={styles.location}>
-                <MapPin size={14} color="#777" /> {profile.location}
+                <Ionicons name="location-outline" size={14} color="#777" /> {profile.location}
               </Text>
             </View>
             <TouchableOpacity style={styles.editButton} onPress={() => setIsEditing(!isEditing)}>
-              <Edit size={16} color="#5B5FEF" />
+              <Ionicons name="create-outline" size={16} color="#5B5FEF" />
               <Text style={styles.editText}>Edit</Text>
             </TouchableOpacity>
           </View>
@@ -115,7 +115,6 @@ const styles = StyleSheet.create({
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
   },
   headerTitle: {
     color: '#fff',

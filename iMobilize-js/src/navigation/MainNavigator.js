@@ -53,4 +53,4 @@ const MainNavigator = () => {
   );
 };
 
-export default MainNavigator; MainNavigator;
+export default MainNavigator;

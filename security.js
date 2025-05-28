@@ -1,6 +1,9 @@
-var crypto = require('crypto');
+const { error } = require('console');
+const crypto = require('crypto');
 
-const ECDH_CURVE = 'secp512r1';
+const ECDH_CURVE = 'sect571r1';
+const IV_LENGTH = 16;
+const ITERATIONS = 100000;
 
 // Data for test values delete upon implementation
 // Following lines are test code prior to implementing security schema with existing systems
@@ -17,16 +20,16 @@ class fakeServer
     }
 
     // Exchange public keys with connection save the public key to be used to securely initiate symmetric encryption
-    keyExchange(otherkey) 
+    keyExchange(otherKey) 
     {
-        var serverKey = crypto.createECDH(ECDH_CURVE)
+        var serverKeys = crypto.createECDH(ECDH_CURVE)
+        var serverPublic = serverKeys.generateKeys('hex', 'compressed');
 
-        var decompressedKey = crypto.ECDH.convertKey(otherkey,ECDH_CURVE, 'hex', 'hex', 'uncompressed');
+        var decompressedKey = crypto.ECDH.convertKey(otherKey, ECDH_CURVE, 'hex', 'hex', 'uncompressed');
 
-        ecdhKey = serverKey.computeSecret(decompressedKey);
+        this.ecdhKey = serverKeys.computeSecret(decompressedKey, 'hex', 'hex');
 
-        serverKey = crypto.ECDH.convertKey(serverKey, 'secp521r1',)
-        return(serverKey);
+        return(serverPublic);
     }
 }
 
@@ -42,20 +45,21 @@ function login()
 {
     // TODO take input from login form and set the username and password
     username = testUsername;
+
     // hash provided password from login form 
     password = crypto.createHash('sha256')
-                        .update(testPassword)
+                        .update(testPassword) // TODO update to input password
                         .digest('hex');  
     //TODO begin login 
     verifyAccount()
 
     // lg for test purposes
-    console.log(estabiishConnection());
+    console.log(establishConnection());
 }
 
 function verifyAccount()
 {
-    var key = establishConnection()
+    //var key = establishConnection()
 }
 
 // Connect to server and generate ECDH key to securely exchange symmetric keys for communication encryption
@@ -65,29 +69,66 @@ function establishConnection()
     var key;
 
     // Generate ECDH public key in a compressed format
-    var ecdhKeys = crypto.createECDH('secp521r1').generateKeys('hex', 'compressed');
+    var ecdhKeys = crypto.createECDH(ECDH_CURVE);
 
     // Connect to server send user's public and receive their public key for mutual private keys
     // testCode
-    var serverKey = server.keyExchange(ecdhKeys)
+    var serverKey = server.keyExchange(ecdhKeys.generateKeys('hex', 'compressed'))
     // 
 
     // Decompress server public key and generate secret key for encrypted server communications
-    serverKey = crypto.ECDH.convertKey(serverKey, 'secp512r1', 'hex', 'hex', 'uncompressed');
-    ecdhKeys = ecdhKeys.computeSecret(serverKey);
+    serverKey = crypto.ECDH.convertKey(serverKey, ECDH_CURVE, 'hex', 'hex', 'uncompressed');
+    ecdhKeys = ecdhKeys.computeSecret(serverKey, 'hex', 'hex');
 
     // Test Code
-    key = (ecdhKeys == server.ecdhKey);
+    key = ecdhKeys;
     // 
+    //console.log(key);
 
+    //console.log(key);
+    message = encryptMessage(key, 'hello there');
+    console.log("Post-En " + message + "\n");
+    message = decryptMessage(key, message);
+    
     // Return encryption key for server communications.
-    return key;
+    return message;
 }
 
 // Encrypt messages to be sent using provided encryption key
 function encryptMessage(key, message)
+{ 
+    if (typeof message != Buffer)
+    {
+        message = Buffer.from(message);
+    }
+
+
+
+    var iv = Buffer.alloc(IV_LENGTH, key);
+    crypto.randomFillSync(iv, 0, IV_LENGTH);
+
+    console.log("During-En m: " + message + "\niv: " + iv + "\n");
+
+    const derivedKey = crypto.pbkdf2Sync(key, iv, ITERATIONS, 32, 'sha256')
+    var cipher = crypto.createCipheriv('aes-256-cbc', derivedKey, iv);
+
+    cipher.update(message);
+
+    return Buffer.concat([iv, cipher.final()]);
+}
+
+// Decrypt messages using provided encryption key
+function decryptMessage(key, message)
 {
-    crypto.scrypt(key)
+    //return cipher = crypto.privateDecrypt(key, message);
+    var iv = message.subarray(0, IV_LENGTH);
+    
+    const derivedKey = crypto.pbkdf2Sync(key, iv, ITERATIONS, 32, 'sha256')
+    var decipher = crypto.createDecipheriv('aes-256-cbc', derivedKey, iv);
+
+    decipher.update(message.subarray(IV_LENGTH, message.length), 'hex', 'utf8');
+
+    return decipher.final('utf8');
 }
 
 

@@ -17,6 +17,8 @@ const {
 
 // Import routes
 const authRoutes = require('./routes/auth');
+const legalRoutes = require('./routes/legal'); 
+
 
 // Create Express app
 const app = express();
@@ -59,6 +61,8 @@ console.log('✅ Rate limiting enabled');
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/legal', legalRoutes); 
+
 
 // Basic Routes
 app.get('/', (req, res) => {
@@ -74,7 +78,9 @@ app.get('/', (req, res) => {
       health: '/health',
       test: '/api/test',
       postgresql_test: '/api/test/postgresql',
-      mongodb_test: '/api/test/mongodb'
+      mongodb_test: '/api/test/mongodb',
+      legal_data: '/api/legal/data',
+      legal_test: '/api/legal/test/citations'
     }
   });
 });
@@ -253,6 +259,8 @@ async function startServer() {
       console.log(`   🔐 POST /api/auth/register    - User registration (placeholder)`);
       console.log(`   🔐 POST /api/auth/login       - User login (placeholder)`);
       console.log(`   🔐 GET  /api/auth/verify      - Token verification (placeholder)\n`);
+      console.log(`   ⚖️  GET  /api/legal/data       - Legal documents`);
+      console.log(`   🧪 GET  /api/legal/test/citations - Test RCW citations\n`);
       
       console.log('🎯 Try visiting: http://localhost:3000');
       console.log('🎯 Or test health: http://localhost:3000/health\n');

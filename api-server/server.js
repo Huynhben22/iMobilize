@@ -20,6 +20,7 @@ const authRoutes = require('./routes/auth');
 const legalRoutes = require('./routes/legal');
 const communityRoutes = require('./routes/community');
 const eventsRoutes = require('./routes/events');
+const groupsRoutes = require('./routes/groups'); // NEW: Groups routes
 
 // Create Express app
 const app = express();
@@ -65,6 +66,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/legal', legalRoutes);
 app.use('/api/community', communityRoutes);
 app.use('/api/events', eventsRoutes);
+app.use('/api/groups', groupsRoutes); // NEW: Groups routes
 
 // Basic Routes
 app.get('/', (req, res) => {
@@ -91,13 +93,26 @@ app.get('/', (req, res) => {
       legal_data: '/api/legal/data',
       legal_test: '/api/legal/test/citations',
       
-      // Community endpoints (NEW)
+      // Community endpoints
       community_forums: '/api/community/forums',
       community_create_forum: 'POST /api/community/forums',
       community_forum_posts: '/api/community/forums/:id/posts',
       community_create_post: 'POST /api/community/forums/:id/posts',
       community_get_post: '/api/community/posts/:id',
-      community_add_comment: 'POST /api/community/posts/:id/comments'
+      community_add_comment: 'POST /api/community/posts/:id/comments',
+
+      // Groups endpoints (NEW)
+      groups_list: '/api/groups',
+      groups_create: 'POST /api/groups',
+      groups_get: '/api/groups/:id',
+      groups_update: 'PUT /api/groups/:id',
+      groups_delete: 'DELETE /api/groups/:id',
+      groups_join: 'POST /api/groups/:id/join',
+      groups_leave: 'DELETE /api/groups/:id/leave',
+      groups_members: '/api/groups/:id/members',
+      groups_update_member: 'PUT /api/groups/:id/members/:userId',
+      groups_remove_member: 'DELETE /api/groups/:id/members/:userId',
+      groups_my_groups: '/api/groups/my-groups'
     }
   });
 });
@@ -260,7 +275,20 @@ app.use((req, res) => {
       'POST /api/events',
       'GET /api/events/:id',
       'POST /api/events/:id/join',
-      'DELETE /api/events/:id/leave'
+      'DELETE /api/events/:id/leave',
+
+       // Groups (NEW)
+      'GET /api/groups',
+      'POST /api/groups',
+      'GET /api/groups/:id',
+      'PUT /api/groups/:id',
+      'DELETE /api/groups/:id',
+      'POST /api/groups/:id/join',
+      'DELETE /api/groups/:id/leave',
+      'GET /api/groups/:id/members',
+      'PUT /api/groups/:id/members/:userId',
+      'DELETE /api/groups/:id/members/:userId',
+      'GET /api/groups/my-groups'
     ]
   });
 });
@@ -324,6 +352,18 @@ async function startServer() {
       console.log(`   👥 POST /api/events/:id/join           - Join an event`);
       console.log(`   🚪 DELETE /api/events/:id/leave        - Leave an event\n`);
 
+      console.log('👥 Groups endpoints (NEW!):');
+      console.log(`   📋 GET  /api/groups                         - List public groups`);
+      console.log(`   ➕ POST /api/groups                         - Create new group`);
+      console.log(`   🔍 GET  /api/groups/:id                     - Get specific group`);
+      console.log(`   ✏️  PUT  /api/groups/:id                     - Update group (admin only)`);
+      console.log(`   🗑️  DELETE /api/groups/:id                  - Delete group (admin only)`);
+      console.log(`   👥 POST /api/groups/:id/join                - Join a group`);
+      console.log(`   🚪 DELETE /api/groups/:id/leave             - Leave a group`);
+      console.log(`   👤 GET  /api/groups/:id/members             - List group members`);
+      console.log(`   🔄 PUT  /api/groups/:id/members/:userId     - Update member role (admin only)`);
+      console.log(`   ❌ DELETE /api/groups/:id/members/:userId   - Remove member (admin/mod only)`);
+      console.log(`   📋 GET  /api/groups/my-groups               - Get current user's groups\n`);
       
       console.log('🎯 Try visiting: http://localhost:3000');
       console.log('🎯 Or test health: http://localhost:3000/health');

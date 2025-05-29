@@ -148,6 +148,27 @@ CORS_CREDENTIALS=true
 | `/api/auth/forgot-password` | POST | Password reset initiation | 🚧 Placeholder |
 | `/api/auth/reset-password` | POST | Password reset completion | 🚧 Placeholder |
 
+### 💬 Community Boards System
+
+| Endpoint | Method | Description | Status |
+|----------|--------|-------------|---------|
+| `/api/community/forums` | GET | List all forums | ✅ **IMPLEMENTED** |
+| `/api/community/forums` | POST | Create new forum | ✅ **IMPLEMENTED** |
+| `/api/community/forums/:id` | GET | Get specific forum details | ✅ **IMPLEMENTED** |
+| `/api/community/forums/:id/posts` | GET | List posts in forum | ✅ **IMPLEMENTED** |
+| `/api/community/forums/:id/posts` | POST | Create new post in forum | ✅ **IMPLEMENTED** |
+| `/api/community/posts/:id` | GET | Get post with comments | ✅ **IMPLEMENTED** |
+| `/api/community/posts/:id/comments` | POST | Add comment to post | ✅ **IMPLEMENTED** |
+| `/api/community/posts/:postId/comments/:commentId` | PUT | Update comment | ✅ **IMPLEMENTED** |
+| `/api/community/posts/:postId/comments/:commentId` | DELETE | Delete comment | ✅ **IMPLEMENTED** |
+
+### ⚖️ Legal Resources System
+
+| Endpoint | Method | Description | Status |
+|----------|--------|-------------|---------|
+| `/api/legal/data` | GET | Legal documents and guides | ✅ **IMPLEMENTED** |
+| `/api/legal/test/citations` | GET | Test RCW citations | ✅ **IMPLEMENTED** |
+
 ## 🔒 Authentication Features
 
 ### ✅ **Implemented Security Features**
@@ -174,6 +195,25 @@ CORS_CREDENTIALS=true
 - Letters, numbers, underscores, and hyphens only
 - Must be unique
 
+## 💬 Community Features
+
+### ✅ **Implemented Community Features**
+
+- **Forum Management**: Create and organize discussion forums
+- **Post System**: Create, read, and organize posts within forums
+- **Comment System**: Add comments with nested reply support
+- **User Permissions**: Role-based access control for moderation
+- **Content Moderation**: Pin posts, lock discussions
+- **Pagination**: Efficient data loading for large discussions
+- **Group Integration**: Private forums for specific groups
+
+### 🛡️ **Community Security**
+- **Rate Limiting**: 50 community requests, 10 posts per 15 minutes
+- **Content Validation**: Title, content length and format validation
+- **Author Permissions**: Users can only edit/delete their own content
+- **Moderator Controls**: Enhanced permissions for content management
+- **Nested Comments**: Organized reply threads with proper relationships
+
 ## 🧪 Testing the API
 
 ### Quick Health Check
@@ -196,25 +236,6 @@ curl -X POST http://localhost:3000/api/auth/register \
   }'
 ```
 
-**Expected Response:**
-```json
-{
-  "success": true,
-  "message": "User registered successfully",
-  "data": {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "user": {
-      "id": 1,
-      "username": "testuser",
-      "email": "test@example.com",
-      "display_name": "Test User",
-      "role": "user",
-      "privacy_level": "standard"
-    }
-  }
-}
-```
-
 **User Login:**
 ```bash
 curl -X POST http://localhost:3000/api/auth/login \
@@ -225,28 +246,68 @@ curl -X POST http://localhost:3000/api/auth/login \
   }'
 ```
 
-**Token Verification:**
+### Community Testing
+
+**List Forums:**
 ```bash
-curl -X GET http://localhost:3000/api/auth/verify \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+curl http://localhost:3000/api/community/forums
 ```
 
-**Profile Update:**
+**Create Forum (requires auth token):**
 ```bash
-curl -X PUT http://localhost:3000/api/auth/profile \
+curl -X POST http://localhost:3000/api/community/forums \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "display_name": "Updated Name",
-    "bio": "Updated bio text"
+    "title": "General Discussion",
+    "description": "Community discussion forum"
   }'
 ```
 
-### Windows-Friendly Testing Commands
-
-For Windows Command Prompt (single line):
+**Create Post:**
 ```bash
-curl -X POST http://localhost:3000/api/auth/register -H "Content-Type: application/json" -d "{\"username\": \"testuser\", \"email\": \"test@example.com\", \"password\": \"TestPass123!\", \"display_name\": \"Test User\", \"terms_accepted\": \"true\"}"
+curl -X POST http://localhost:3000/api/community/forums/1/posts \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Welcome Post",
+    "content": "Welcome to our community!"
+  }'
+```
+
+**Add Comment:**
+```bash
+curl -X POST http://localhost:3000/api/community/posts/1/comments \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "content": "Great post! Looking forward to the discussion."
+  }'
+```
+
+### Windows PowerShell Testing
+
+For Windows users, comprehensive PowerShell testing scripts are available:
+
+```powershell
+# Complete community API test
+$userBody = @{
+    username = "test_user_$(Get-Date -Format 'yyyyMMddHHmmss')"
+    email = "test$(Get-Date -Format 'yyyyMMddHHmmss')@example.com"
+    password = "TestPass123!"
+    display_name = "API Test User"
+    terms_accepted = "true"
+} | ConvertTo-Json
+
+$userResponse = Invoke-RestMethod -Uri "http://localhost:3000/api/auth/register" -Method POST -Body $userBody -ContentType "application/json"
+$token = $userResponse.data.token
+
+$headers = @{
+    "Authorization" = "Bearer $token"
+    "Content-Type" = "application/json"
+}
+
+# Test forum creation, posts, and comments...
 ```
 
 ## 🔧 Core Components
@@ -262,16 +323,6 @@ curl -X POST http://localhost:3000/api/auth/register -H "Content-Type: applicati
 - Graceful connection cleanup
 - Helper functions to prevent connection redeclaration
 
-**Key Functions**:
-```javascript
-initializeDatabases()         // Initialize both database connections
-closeDatabaseConnections()    // Gracefully close all connections
-getPostgreSQLPool()          // Get PostgreSQL connection pool
-getMongoDatabase()           // Get MongoDB database instance
-testPostgreSQLConnection()   // Test PostgreSQL connectivity
-testMongoDBConnection()      // Test MongoDB connectivity
-```
-
 ### 2. Authentication Middleware (`middleware/auth.js`)
 
 **Purpose**: JWT token verification and user authentication
@@ -282,23 +333,24 @@ testMongoDBConnection()      // Test MongoDB connectivity
 - Role-based access control
 - Comprehensive error handling
 
-**Functions**:
-```javascript
-verifyToken(req, res, next)  // Verify JWT token middleware
-requireRole(roles)           // Role-based access control
-```
+### 3. Route Handlers
 
-### 3. Authentication Routes (`routes/auth.js`)
-
-**Purpose**: Complete user authentication system
-
-**Features**:
-- User registration with validation
-- Secure login with password verification
-- Token verification
-- Profile updates
+**Authentication Routes (`routes/auth.js`)**:
+- Complete user authentication system
+- Registration, login, profile management
+- Password security and validation
 - Rate limiting protection
-- Input sanitization
+
+**Community Routes (`routes/community.js`)**:
+- Full forum management system
+- Post creation and management
+- Comment system with nested replies
+- Moderation and permission controls
+
+**Legal Routes (`routes/legal.js`)**:
+- Legal resource management
+- RCW citation system
+- Jurisdiction-specific content
 
 ### 4. Main Server (`server.js`)
 
@@ -308,14 +360,7 @@ requireRole(roles)           // Role-based access control
 1. **Helmet** - Security headers
 2. **CORS** - Cross-origin resource sharing
 3. **Express.json** - JSON body parsing (10MB limit)
-4. **Rate Limiting** - Request throttling (100 req/15min, 5 auth req/15min)
-
-**Features**:
-- Database connection initialization on startup
-- Comprehensive error handling
-- Graceful shutdown on SIGTERM/SIGINT
-- Development-friendly logging
-- Environment-based configuration
+4. **Rate Limiting** - Request throttling
 
 ## 🛡️ Security Features
 
@@ -323,29 +368,30 @@ requireRole(roles)           // Role-based access control
 
 1. **Helmet.js** - Sets security-related HTTP headers
 2. **CORS** - Configured for development and production origins
-3. **Rate Limiting** - Prevents abuse (100 requests per 15 minutes, 5 auth per 15 minutes)
+3. **Rate Limiting** - Prevents abuse (100 requests per 15 minutes general, 50 community, 10 posts, 5 auth per 15 minutes)
 4. **Input Validation** - Comprehensive validation with express-validator
 5. **Password Security** - bcrypt hashing with 12 salt rounds
 6. **JWT Authentication** - Secure token-based authentication
 7. **SQL Injection Prevention** - Parameterized queries
 8. **Environment Variables** - Sensitive data stored securely
 
-### Authentication Security
+### Community-Specific Security
 
-- **Password Hashing**: bcrypt with 12 salt rounds
-- **JWT Tokens**: Secure generation with configurable expiration
-- **Rate Limiting**: 5 authentication attempts per 15 minutes per IP
-- **Input Validation**: Comprehensive field validation and sanitization
-- **User Verification**: Token-based user existence checking
-- **Secure Headers**: Helmet.js security headers
+- **Content Validation**: Post titles (3-100 chars), content (10-5000 chars), comments (1-1000 chars)
+- **Author Verification**: Users can only modify their own content
+- **Moderator Controls**: Enhanced permissions for content management
+- **Rate Limiting**: Separate limits for posting vs browsing
+- **Group Permissions**: Private forum access control
 
 ## 📊 Database Schema Overview
 
 ### PostgreSQL Tables
 - `users` - User accounts and profiles ✅ **Active**
+- `forums` - Discussion forums ✅ **Active**
+- `forum_posts` - Posts within forums ✅ **Active**
+- `post_comments` - Comments on posts ✅ **Active**
 - `events` - Activism events and gatherings
 - `groups` - User groups and organizations
-- `forums` - Discussion forums
 - `resources` - Educational resources
 - `locations` - Geographic locations
 
@@ -381,24 +427,63 @@ requireRole(roles)           // Role-based access control
 }
 ```
 
-### Health Check Response
+### Community Response Examples
+
+**Forum List Response:**
 ```json
 {
-  "status": "✅ Healthy",
-  "timestamp": "2025-05-25T20:00:00.000Z",
-  "uptime": 3600,
-  "databases": {
-    "postgresql": {
-      "status": "✅ Connected",
-      "database": "imobilize",
-      "current_time": "2025-05-25T20:00:00.000Z"
-    },
-    "mongodb": {
-      "status": "✅ Connected",
-      "database": "imobilize",
-      "collections": 5,
-      "dataSize": 408
+  "success": true,
+  "message": "Forums retrieved successfully",
+  "data": {
+    "forums": [
+      {
+        "id": 1,
+        "title": "General Discussion",
+        "description": "Community discussion forum",
+        "post_count": 5,
+        "moderator_username": "admin",
+        "created_at": "2025-05-28T00:42:22.978Z"
+      }
+    ],
+    "pagination": {
+      "total": 1,
+      "limit": 20,
+      "offset": 0,
+      "has_more": false
     }
+  }
+}
+```
+
+**Post with Comments Response:**
+```json
+{
+  "success": true,
+  "message": "Post retrieved successfully",
+  "data": {
+    "post": {
+      "id": 1,
+      "title": "Welcome Post",
+      "content": "Welcome to our community!",
+      "author_username": "testuser",
+      "created_at": "2025-05-28T00:42:22.978Z"
+    },
+    "comments": [
+      {
+        "id": 1,
+        "content": "Great post!",
+        "author_username": "commenter",
+        "created_at": "2025-05-28T00:45:22.978Z",
+        "replies": [
+          {
+            "id": 2,
+            "content": "I agree!",
+            "author_username": "replier",
+            "created_at": "2025-05-28T00:50:22.978Z"
+          }
+        ]
+      }
+    ]
   }
 }
 ```
@@ -418,7 +503,7 @@ requireRole(roles)           // Role-based access control
 1. **Start development server**: `npm run dev`
 2. **Make changes** to routes, middleware, or configuration
 3. **Server automatically restarts** with nodemon
-4. **Test endpoints** using curl or API client
+4. **Test endpoints** using curl, PowerShell, or API client
 5. **Check logs** in terminal for debugging
 6. **Commit changes** when stable
 
@@ -435,13 +520,24 @@ requireRole(roles)           // Role-based access control
 - [x] Rate limiting
 - [x] Input validation and sanitization
 - [x] Error handling and responses
+- [x] Forum creation and management
+- [x] Post creation and retrieval
+- [x] Comment system with nested replies
+- [x] Content moderation features
+- [x] Pagination support
+- [x] Permission-based access control
 
 ### 🚧 **Pending Implementation**
 - [ ] Password reset functionality
 - [ ] Email verification
 - [ ] Account lockout after failed attempts
 - [ ] Token refresh mechanism
-- [ ] Advanced user management
+- [ ] Events API
+- [ ] Groups API
+- [ ] Notifications system
+- [ ] Search functionality
+- [ ] File upload support
+- [ ] Real-time updates (WebSockets)
 - [ ] Automated testing suite
 
 ## 🚨 Common Issues & Solutions
@@ -467,15 +563,11 @@ taskkill /PID <process_id> /F
 lsof -ti:3000 | xargs kill -9
 ```
 
-### **Module Import Errors**:
-- Run `npm install` to ensure all dependencies are installed
-- Check Node.js version compatibility (v20+)
-
-### **CORS Errors (Frontend)**:
-Add your frontend URL to `.env`:
-```env
-CORS_ORIGIN=http://localhost:19006,http://localhost:3001,http://your-frontend-url
-```
+### **Community API Issues**:
+- **Forum Not Found**: Verify forum ID exists using `GET /api/community/forums`
+- **Unauthorized**: Include valid JWT token in Authorization header
+- **Rate Limited**: Wait 15 minutes before retrying post creation
+- **Validation Errors**: Check content length requirements
 
 ## 📈 Performance Considerations
 
@@ -485,6 +577,10 @@ CORS_ORIGIN=http://localhost:19006,http://localhost:3001,http://your-frontend-ur
 - **Memory Usage**: JSON body size limited to 10MB
 - **Graceful Shutdown**: Ensures clean database disconnection
 - **Input Validation**: Early validation prevents unnecessary processing
+- **Pagination**: Efficient loading of large forum datasets
+- **Index Optimization**: Database queries optimized for performance
+
+## 🎯 Development Phases
 
 ### ✅ Phase 1: Authentication Foundation - **COMPLETE**
 - [x] Database connections (PostgreSQL + MongoDB)
@@ -494,11 +590,38 @@ CORS_ORIGIN=http://localhost:19006,http://localhost:3001,http://your-frontend-ur
 - [x] User registration and login
 - [x] Password security and validation
 - [x] Rate limiting and input validation
+
+### ✅ Phase 2: Community Boards - **COMPLETE**
+- [x] Forum management system
+- [x] Post creation and management
+- [x] Comment system with nested replies
+- [x] Content moderation features
+- [x] Pagination and filtering
+- [x] Permission-based access control
+- [x] Comprehensive testing and validation
+
+### 🚧 Phase 3: Events & Groups - **IN PROGRESS**
+- [ ] Events API for activism coordination
+- [ ] Groups API for user organization
+- [ ] Event-group relationships
+- [ ] RSVP and attendance tracking
+- [ ] Location-based event discovery
+
+### 🚧 Phase 4: Advanced Features - **PLANNED**
+- [ ] Real-time notifications
+- [ ] File upload and sharing
+- [ ] Search and filtering
+- [ ] Email notifications
+- [ ] Mobile push notifications
+- [ ] Admin dashboard
+
 ---
 
-**Last Updated**: May 26, 2025  
-**Version**: 1.1.0  
-**Status**: Authentication System **COMPLETE** ✅  
+**Last Updated**: May 28, 2025  
+**Version**: 1.2.0  
+**Status**: Authentication & Community Systems **COMPLETE** ✅  
 **Team**: iMobilize Development Team
 
-**🎉 Authentication system is fully functional and production-ready!**
+**🎉 Authentication and Community Boards systems are fully functional and production-ready!**
+
+The API server now provides a solid foundation for social activism coordination with secure user management and robust community discussion features.

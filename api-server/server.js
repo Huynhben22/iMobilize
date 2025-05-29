@@ -17,8 +17,8 @@ const {
 
 // Import routes
 const authRoutes = require('./routes/auth');
-const legalRoutes = require('./routes/legal'); 
-
+const legalRoutes = require('./routes/legal');
+const communityRoutes = require('./routes/community'); // NEW
 
 // Create Express app
 const app = express();
@@ -61,14 +61,14 @@ console.log('✅ Rate limiting enabled');
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/legal', legalRoutes); 
-
+app.use('/api/legal', legalRoutes);
+app.use('/api/community', communityRoutes); // NEW
 
 // Basic Routes
 app.get('/', (req, res) => {
   res.json({ 
     message: '🚀 iMobilize API Server is running!',
-    version: '1.0.0',
+    version: '1.1.0',
     timestamp: new Date().toISOString(),
     databases: {
       postgresql: '✅ Connected',
@@ -79,8 +79,23 @@ app.get('/', (req, res) => {
       test: '/api/test',
       postgresql_test: '/api/test/postgresql',
       mongodb_test: '/api/test/mongodb',
+      
+      // Authentication endpoints
+      auth_register: '/api/auth/register',
+      auth_login: '/api/auth/login',
+      auth_verify: '/api/auth/verify',
+      
+      // Legal endpoints
       legal_data: '/api/legal/data',
-      legal_test: '/api/legal/test/citations'
+      legal_test: '/api/legal/test/citations',
+      
+      // Community endpoints (NEW)
+      community_forums: '/api/community/forums',
+      community_create_forum: 'POST /api/community/forums',
+      community_forum_posts: '/api/community/forums/:id/posts',
+      community_create_post: 'POST /api/community/forums/:id/posts',
+      community_get_post: '/api/community/posts/:id',
+      community_add_comment: 'POST /api/community/posts/:id/comments'
     }
   });
 });
@@ -136,7 +151,7 @@ app.get('/api/test', (req, res) => {
     message: '✅ API is working correctly!',
     environment: process.env.NODE_ENV || 'development',
     timestamp: new Date().toISOString(),
-    server: 'iMobilize API v1.0.0'
+    server: 'iMobilize API v1.1.0'
   });
 });
 
@@ -222,7 +237,21 @@ app.use((req, res) => {
       'GET /health',
       'GET /api/test',
       'GET /api/test/postgresql',
-      'GET /api/test/mongodb'
+      'GET /api/test/mongodb',
+      
+      // Authentication
+      'POST /api/auth/register',
+      'POST /api/auth/login',
+      'GET /api/auth/verify',
+      
+      // Community
+      'GET /api/community/forums',
+      'POST /api/community/forums',
+      'GET /api/community/forums/:id',
+      'GET /api/community/forums/:id/posts',
+      'POST /api/community/forums/:id/posts',
+      'GET /api/community/posts/:id',
+      'POST /api/community/posts/:id/comments'
     ]
   });
 });
@@ -251,19 +280,37 @@ async function startServer() {
       console.log(`⏰ Started at: ${new Date().toISOString()}\n`);
       
       console.log('📋 Available endpoints:');
-      console.log(`   🏠 GET  /                     - Server status & info`);
-      console.log(`   💗 GET  /health               - Health check with DB status`);
-      console.log(`   🧪 GET  /api/test             - API test`);
-      console.log(`   🐘 GET  /api/test/postgresql  - PostgreSQL connection test`);
-      console.log(`   🍃 GET  /api/test/mongodb     - MongoDB connection test`);
-      console.log(`   🔐 POST /api/auth/register    - User registration (placeholder)`);
-      console.log(`   🔐 POST /api/auth/login       - User login (placeholder)`);
-      console.log(`   🔐 GET  /api/auth/verify      - Token verification (placeholder)\n`);
-      console.log(`   ⚖️  GET  /api/legal/data       - Legal documents`);
-      console.log(`   🧪 GET  /api/legal/test/citations - Test RCW citations\n`);
+      console.log(`   🏠 GET  /                          - Server status & info`);
+      console.log(`   💗 GET  /health                    - Health check with DB status`);
+      console.log(`   🧪 GET  /api/test                  - API test`);
+      console.log(`   🐘 GET  /api/test/postgresql       - PostgreSQL connection test`);
+      console.log(`   🍃 GET  /api/test/mongodb          - MongoDB connection test\n`);
+      
+      console.log('🔐 Authentication endpoints:');
+      console.log(`   📝 POST /api/auth/register         - User registration`);
+      console.log(`   🔐 POST /api/auth/login            - User login`);
+      console.log(`   ✅ GET  /api/auth/verify           - Token verification`);
+      console.log(`   🚪 POST /api/auth/logout           - User logout`);
+      console.log(`   👤 PUT  /api/auth/profile          - Update profile\n`);
+      
+      console.log('⚖️  Legal endpoints:');
+      console.log(`   📚 GET  /api/legal/data            - Legal documents`);
+      console.log(`   🧪 GET  /api/legal/test/citations  - Test RCW citations\n`);
+      
+      console.log('💬 Community endpoints (NEW!):');
+      console.log(`   📋 GET  /api/community/forums                 - List all forums`);
+      console.log(`   ➕ POST /api/community/forums                 - Create new forum`);
+      console.log(`   🔍 GET  /api/community/forums/:id             - Get specific forum`);
+      console.log(`   📝 GET  /api/community/forums/:id/posts       - Get forum posts`);
+      console.log(`   ➕ POST /api/community/forums/:id/posts       - Create new post`);
+      console.log(`   📖 GET  /api/community/posts/:id              - Get post with comments`);
+      console.log(`   💬 POST /api/community/posts/:id/comments     - Add comment to post`);
+      console.log(`   ✏️  PUT  /api/community/posts/:postId/comments/:commentId - Update comment`);
+      console.log(`   🗑️  DELETE /api/community/posts/:postId/comments/:commentId - Delete comment\n`);
       
       console.log('🎯 Try visiting: http://localhost:3000');
-      console.log('🎯 Or test health: http://localhost:3000/health\n');
+      console.log('🎯 Or test health: http://localhost:3000/health');
+      console.log('🎯 Community forums: http://localhost:3000/api/community/forums\n');
     });
     
   } catch (error) {

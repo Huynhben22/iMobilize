@@ -18,7 +18,8 @@ const {
 // Import routes
 const authRoutes = require('./routes/auth');
 const legalRoutes = require('./routes/legal');
-const communityRoutes = require('./routes/community'); // NEW
+const communityRoutes = require('./routes/community');
+const eventsRoutes = require('./routes/events');
 
 // Create Express app
 const app = express();
@@ -62,7 +63,8 @@ console.log('✅ Rate limiting enabled');
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/legal', legalRoutes);
-app.use('/api/community', communityRoutes); // NEW
+app.use('/api/community', communityRoutes);
+app.use('/api/events', eventsRoutes);
 
 // Basic Routes
 app.get('/', (req, res) => {
@@ -251,7 +253,14 @@ app.use((req, res) => {
       'GET /api/community/forums/:id/posts',
       'POST /api/community/forums/:id/posts',
       'GET /api/community/posts/:id',
-      'POST /api/community/posts/:id/comments'
+      'POST /api/community/posts/:id/comments',
+
+        // Events (NEW)
+      'GET /api/events',
+      'POST /api/events',
+      'GET /api/events/:id',
+      'POST /api/events/:id/join',
+      'DELETE /api/events/:id/leave'
     ]
   });
 });
@@ -307,6 +316,14 @@ async function startServer() {
       console.log(`   💬 POST /api/community/posts/:id/comments     - Add comment to post`);
       console.log(`   ✏️  PUT  /api/community/posts/:postId/comments/:commentId - Update comment`);
       console.log(`   🗑️  DELETE /api/community/posts/:postId/comments/:commentId - Delete comment\n`);
+
+      console.log('📅 Events endpoints (NEW!):');
+      console.log(`   📋 GET  /api/events                    - List public events`);
+      console.log(`   ➕ POST /api/events                    - Create new event`);
+      console.log(`   🔍 GET  /api/events/:id                - Get specific event`);
+      console.log(`   👥 POST /api/events/:id/join           - Join an event`);
+      console.log(`   🚪 DELETE /api/events/:id/leave        - Leave an event\n`);
+
       
       console.log('🎯 Try visiting: http://localhost:3000');
       console.log('🎯 Or test health: http://localhost:3000/health');

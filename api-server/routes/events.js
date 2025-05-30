@@ -4,6 +4,7 @@ const { body, validationResult, param, query } = require('express-validator');
 const rateLimit = require('express-rate-limit');
 const { getPostgreSQLPool } = require('../config/database');
 const { verifyToken, requireRole } = require('../middleware/auth');
+const { createGroupEventNotification } = require('./notifications');
 
 const router = express.Router();
 
@@ -386,10 +387,19 @@ router.post('/', verifyToken, createEventLimiter, eventValidation, async (req, r
       VALUES ($1, $2, 'organizer', 'confirmed', CURRENT_TIMESTAMP)
     `, [newEvent.id, userId]);
 
-    // If it's a group event, notify group members
-    if (organizing_group_id) {
-      // TODO: Implement notification system
-      console.log(`📢 New group event created: ${title} for group ${organizing_group_id}`);
+     if (organizing_group_id) {
+      try {
+        const notificationsCreated = await createGroupEventNotification(
+          organizing_group_id,
+          newEvent.id,
+          newEvent.title,
+          'event_created'
+        );
+        console.log(`📢 Created ${notificationsCreated} notifications for group ${organizing_group_id} event: ${title}`);
+      } catch (error) {
+        console.error('Failed to create event notifications:', error);
+        // Don't fail the event creation if notifications fail
+      }
     }
 
     res.status(201).json({

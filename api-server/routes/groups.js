@@ -4,6 +4,7 @@ const { body, validationResult, param, query } = require('express-validator');
 const rateLimit = require('express-rate-limit');
 const { getPostgreSQLPool } = require('../config/database');
 const { verifyToken, requireRole } = require('../middleware/auth');
+const { createGroupJoinNotification } = require('./notifications');
 
 const router = express.Router();
 
@@ -709,6 +710,15 @@ router.post('/:id/join', verifyToken, groupsLimiter, [
     const responseMessage = group.is_private 
       ? 'Join request sent successfully' 
       : 'Successfully joined group';
+
+    // Notify group admins/moderators about new member
+    try {
+      const notificationsCreated = await createGroupJoinNotification(groupId, req.user.username);
+      console.log(`📢 Created ${notificationsCreated} join notifications for group ${groupId}`);
+    } catch (error) {
+      console.error('Failed to create group join notifications:', error);
+      // Don't fail the join if notifications fail
+    }
 
     res.status(201).json({
       success: true,

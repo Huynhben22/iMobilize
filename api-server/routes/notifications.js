@@ -1,4 +1,4 @@
-// routes/notifications.js
+// routes/notifications.js - Complete Implementation
 const express = require('express');
 const { body, validationResult, param, query } = require('express-validator');
 const rateLimit = require('express-rate-limit');
@@ -215,7 +215,6 @@ router.put('/read-all', verifyToken, notificationsLimiter, async (req, res) => {
       UPDATE notifications 
       SET is_read = true 
       WHERE user_id = $1 AND is_read = false
-      RETURNING COUNT(*) as updated_count
     `, [userId]);
 
     res.json({
@@ -297,15 +296,16 @@ async function createGroupEventNotification(groupId, eventId, eventTitle, eventT
   try {
     const pool = getPostgreSQLPool();
     
-    // Get all group members
+    // Get all group members except the event creator
     const membersResult = await pool.query(`
-      SELECT gm.user_id, u.username
+      SELECT gm.user_id, u.username, e.organizer_id
       FROM group_members gm
       JOIN users u ON gm.user_id = u.id
-      WHERE gm.group_id = $1
-    `, [groupId]);
+      JOIN events e ON e.id = $2
+      WHERE gm.group_id = $1 AND gm.user_id != e.organizer_id
+    `, [groupId, eventId]);
 
-    // Create notifications for all group members
+    // Create notifications for all group members (except organizer)
     for (const member of membersResult.rows) {
       await pool.query(`
         INSERT INTO notifications (
@@ -323,9 +323,11 @@ async function createGroupEventNotification(groupId, eventId, eventTitle, eventT
       ]);
     }
 
-    console.log(`📢 Created notifications for ${membersResult.rows.length} group members`);
+    console.log(`📢 Created ${eventType} notifications for ${membersResult.rows.length} group members`);
+    return membersResult.rows.length;
   } catch (error) {
     console.error('Error creating group event notifications:', error);
+    return 0;
   }
 }
 
@@ -361,8 +363,12 @@ async function createGroupJoinNotification(groupId, newMemberUsername) {
         `/groups/${groupId}`
       ]);
     }
+
+    console.log(`📢 Created group join notifications for ${adminsResult.rows.length} group admins/moderators`);
+    return adminsResult.rows.length;
   } catch (error) {
     console.error('Error creating group join notifications:', error);
+    return 0;
   }
 }
 
@@ -383,6 +389,8 @@ async function createEventReminders() {
       AND e.status = 'upcoming'
       AND ep.status = 'confirmed'
     `);
+
+    let remindersCreated = 0;
 
     // Create reminder notifications
     for (const event of upcomingEvents.rows) {
@@ -409,19 +417,43 @@ async function createEventReminders() {
           `/events/${event.id}`,
           new Date(event.start_time) // Expire after event starts
         ]);
+        remindersCreated++;
       }
     }
 
-    console.log(`⏰ Created reminders for ${upcomingEvents.rows.length} upcoming events`);
+    console.log(`⏰ Created ${remindersCreated} event reminder notifications`);
+    return remindersCreated;
   } catch (error) {
     console.error('Error creating event reminders:', error);
+    return 0;
   }
 }
 
-// Export helper functions for use in other routes
+/**
+ * Clean up expired notifications
+ */
+async function cleanupExpiredNotifications() {
+  try {
+    const pool = getPostgreSQLPool();
+    
+    const result = await pool.query(`
+      DELETE FROM notifications 
+      WHERE expires_at IS NOT NULL AND expires_at < CURRENT_TIMESTAMP
+    `);
+
+    console.log(`🧹 Cleaned up ${result.rowCount} expired notifications`);
+    return result.rowCount;
+  } catch (error) {
+    console.error('Error cleaning up expired notifications:', error);
+    return 0;
+  }
+}
+
+// Export router and helper functions
 module.exports = {
   router,
   createGroupEventNotification,
   createGroupJoinNotification,
-  createEventReminders
+  createEventReminders,
+  cleanupExpiredNotifications
 };

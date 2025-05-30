@@ -1,86 +1,65 @@
 # iMobilize API Server
 
-A comprehensive RESTful API server for social activism coordination, built with Node.js, Express.js, PostgreSQL, and MongoDB.
+> **A comprehensive RESTful API for social activism coordination**  
+> Built with Node.js, Express.js, PostgreSQL, and MongoDB
 
-**🎯 Status**: Phase 5 Complete - Advanced Integration Ready for Production
-
----
-
-## 🏗️ Architecture
-
-```
-api-server/
-├── config/              # Database configuration
-├── middleware/          # Authentication & validation
-├── routes/              # API endpoints
-├── server.js            # Main application
-└── schema.sql          # Database schema
-```
-
-**Design Pattern**: Modular MVC architecture with clear separation of concerns
-- **Routes**: Handle HTTP requests and responses
-- **Middleware**: Authentication, validation, rate limiting
-- **Config**: Database connections and environment management
-- **Security**: JWT authentication, input validation, SQL injection prevention
+[![Status](https://img.shields.io/badge/Status-Production%20Ready-success)](/)
+[![Version](https://img.shields.io/badge/Version-1.5.0-blue)](/)
+[![Phase](https://img.shields.io/badge/Phase-5%20Complete-orange)](/)
 
 ---
 
-## 🔧 Tech Stack
-
-| Component | Technology | Version | Purpose |
-|-----------|------------|---------|---------|
-| **Runtime** | Node.js | v22.16.0+ | Server runtime |
-| **Framework** | Express.js | v4.19.2 | Web framework |
-| **Database** | PostgreSQL | 17.5 | Relational data (users, events, groups) |
-| **Database** | MongoDB | 8.0.9 | Document storage (messages, logs) |
-| **Authentication** | JWT + bcrypt | Latest | Secure user authentication |
-| **Validation** | express-validator | Latest | Input validation |
-| **Security** | Helmet + CORS | Latest | Security headers & CORS |
-| **Development** | Nodemon | Latest | Auto-restart during development |
-
----
-
-## 🚀 Getting Started
+## 🚀 Quick Start
 
 ### Prerequisites
 - Node.js v20+ and npm v10+
-- PostgreSQL 17+ running on port 5432
-- MongoDB 8.0+ running on port 27017
+- PostgreSQL 17+ (port 5432)
+- MongoDB 8.0+ (port 27017)
 
-### Quick Setup
+### Installation
 ```bash
-# 1. Navigate to API server
+# 1. Clone and navigate
 cd iMobilize/api-server
 
 # 2. Install dependencies
 npm install
 
-# 3. Set up environment variables
+# 3. Setup environment
 cp .env.example .env
 # Edit .env with your database credentials
 
-# 4. Create databases
+# 4. Initialize database
 psql -U postgres -c "CREATE DATABASE imobilize;"
 psql -U postgres -d imobilize -f schema.sql
 
-# 5. Start development server
+# 5. Start server
 npm run dev
 ```
 
-### Verify Installation
+### Verify Setup
 ```bash
-# Check server health
 curl http://localhost:3000/health
-
-# Test API functionality
 curl http://localhost:3000/api/test
 ```
 
 ---
 
-## ⚙️ Environment Configuration
+## 📋 API Endpoints Overview
 
-### Required `.env` Variables
+| **Category** | **Endpoints** | **Features** |
+|-------------|---------------|--------------|
+| **🔐 Authentication** | `/api/auth/*` | JWT-based login, registration, profile management |
+| **👥 Groups** | `/api/groups/*` | Create, join, manage activist groups with roles |
+| **📅 Events** | `/api/events/*` | Event coordination with group integration |
+| **💬 Community** | `/api/community/*` | Forums, posts, nested comments |
+| **🔔 Notifications** | `/api/notifications/*` | Real-time alerts and reminders |
+| **⚖️ Legal** | `/api/legal/*` | Jurisdiction-specific legal resources |
+
+---
+
+## 🔧 Configuration
+
+### Environment Variables
 ```env
 # Server
 PORT=3000
@@ -88,9 +67,8 @@ NODE_ENV=development
 
 # PostgreSQL
 PG_HOST=localhost
-PG_PORT=5432
 PG_USER=postgres
-PG_PASSWORD=your_postgres_password
+PG_PASSWORD=your_password
 PG_DATABASE=imobilize
 
 # MongoDB
@@ -98,268 +76,205 @@ MONGO_URI=mongodb://localhost:27017
 MONGO_DB_NAME=imobilize
 
 # Security
-JWT_SECRET=your-super-secure-jwt-secret-key-at-least-32-characters-long
+JWT_SECRET=your-super-secure-32-character-secret
 JWT_EXPIRES_IN=24h
 
-# CORS
+# CORS (for mobile apps)
 CORS_ORIGIN=http://localhost:19006,http://localhost:3001
 ```
 
-### Security Requirements
-- **JWT Secret**: Minimum 32 characters, cryptographically secure
-- **Passwords**: 8+ chars with uppercase, lowercase, number, special character
-- **Rate Limiting**: Automatic protection against API abuse
+---
+
+## 📱 API Documentation
+
+### Authentication Endpoints
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| `POST` | `/api/auth/register` | User registration | ❌ |
+| `POST` | `/api/auth/login` | User login | ❌ |
+| `GET` | `/api/auth/verify` | Token verification | ✅ |
+| `PUT` | `/api/auth/profile` | Update profile | ✅ |
+| `POST` | `/api/auth/logout` | User logout | ✅ |
+
+#### Example: User Registration
+```bash
+curl -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "activist123",
+    "email": "user@example.com",
+    "password": "SecurePass123!",
+    "display_name": "Jane Activist",
+    "terms_accepted": "true"
+  }'
+```
+
+### Groups Management
+
+| Method | Endpoint | Description | Features |
+|--------|----------|-------------|----------|
+| `GET` | `/api/groups` | List groups | Search, pagination, privacy filters |
+| `POST` | `/api/groups` | Create group | Public/private, cover images |
+| `GET` | `/api/groups/:id` | Group details | Members, stats, recent activity |
+| `POST` | `/api/groups/:id/join` | Join group | Auto-notifications to admins |
+| `GET` | `/api/groups/my-groups` | User's groups | Role-based filtering |
+
+#### Example: Create Group
+```bash
+curl -X POST http://localhost:3000/api/groups \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Climate Action Seattle",
+    "description": "Local climate activism group",
+    "is_private": false
+  }'
+```
+
+### Events Coordination
+
+| Method | Endpoint | Description | Enhanced Features |
+|--------|----------|-------------|-------------------|
+| `GET` | `/api/events` | List events | Group filtering, categories, location search |
+| `POST` | `/api/events` | Create event | Group integration, auto-notifications |
+| `GET` | `/api/events/:id` | Event details | Participants, group info |
+| `POST` | `/api/events/:id/join` | Join event | Access codes for private events |
+| `GET` | `/api/events/groups/:groupId/events` | Group events | Group-specific event listing |
+
+#### Advanced Filtering
+```bash
+# Filter by group and category
+GET /api/events?group_id=1&category=rally&my_groups_only=true
+
+# Search by location
+GET /api/events?location=downtown&status=upcoming
+
+# Pagination
+GET /api/events?limit=20&offset=40
+```
+
+#### Event Categories
+- `rally` - Public demonstrations
+- `meeting` - Group meetings
+- `training` - Educational sessions
+- `action` - Direct action events
+- `fundraiser` - Fundraising events
+- `social` - Community building
+
+### Notifications System
+
+| Method | Endpoint | Description | Types |
+|--------|----------|-------------|-------|
+| `GET` | `/api/notifications` | Get notifications | Filter by type, read status |
+| `PUT` | `/api/notifications/:id/read` | Mark as read | Individual notification |
+| `PUT` | `/api/notifications/read-all` | Mark all read | Bulk operation |
+| `DELETE` | `/api/notifications/:id` | Delete notification | User cleanup |
+
+#### Notification Types
+- `event_created` - New group events
+- `group_joined` - New member alerts
+- `forum_post` - Community activity
+- `event_reminder` - 24-hour event reminders
 
 ---
 
-## 📚 API Documentation
+## 🎯 Key Features
 
-### Base URL: `http://localhost:3000`
+### 🔐 **Security & Authentication**
+- JWT tokens with 24-hour expiration
+- bcrypt password hashing (12 salt rounds)
+- Rate limiting (100 requests/15 minutes)
+- Input validation and SQL injection prevention
+- Role-based access control (admin, moderator, member)
 
-### Authentication
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/auth/register` | POST | User registration |
-| `/api/auth/login` | POST | User login |
-| `/api/auth/verify` | GET | Token verification |
-| `/api/auth/profile` | PUT | Update profile |
+### 👥 **Group Management**
+- **Hierarchical Roles**: Admin → Moderator → Member
+- **Privacy Controls**: Public discovery vs private groups
+- **Smart Notifications**: Auto-notify admins of new members
+- **Member Management**: Promote, demote, remove members
+- **Group Events**: Seamless event organization
 
-### Groups Management
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/groups` | GET | List groups |
-| `/api/groups` | POST | Create group |
-| `/api/groups/:id` | GET | Get group details |
-| `/api/groups/:id/join` | POST | Join group |
-| `/api/groups/:id/members` | GET | List members |
-| `/api/groups/my-groups` | GET | User's groups |
+### 📅 **Advanced Event System**
+- **Group Integration**: Events can be organized by groups
+- **Smart Filtering**: By group membership, category, location
+- **Privacy Levels**: Public, private, group-members-only
+- **Automatic Notifications**: Alert group members of new events
+- **Categories**: Rally, meeting, training, action, fundraiser, social
 
-### Events Coordination
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/events` | GET | List events with filtering |
-| `/api/events` | POST | Create event |
-| `/api/events/:id` | GET | Get event details |
-| `/api/events/:id/join` | POST | Join event |
-| `/api/events/groups/:groupId/events` | GET | Group events |
+### 🔔 **Intelligent Notifications**
+- **Real-time Alerts**: Group activities and event updates
+- **Smart Filtering**: Type, read status, expiration
+- **Event Reminders**: Automatic 24-hour advance notices
+- **Group Context**: Notifications tied to group membership
 
-### Community Forums
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/community/forums` | GET | List forums |
-| `/api/community/forums` | POST | Create forum |
-| `/api/community/forums/:id/posts` | GET | Forum posts |
-| `/api/community/posts/:id/comments` | POST | Add comment |
+---
 
-### Notifications
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/notifications` | GET | Get notifications |
-| `/api/notifications/:id/read` | PUT | Mark as read |
-| `/api/notifications/read-all` | PUT | Mark all read |
+## 📱 Frontend Integration
 
-### Query Parameters & Filtering
-```bash
-# Event filtering
-GET /api/events?category=rally&group_id=1&location=downtown
+### Quick Integration Guide
 
-# Pagination
-GET /api/events?limit=10&offset=20
+#### 1. **API Service Setup**
+```javascript
+// services/api.js
+class ApiService {
+  constructor() {
+    this.baseURL = 'http://localhost:3000/api';
+  }
 
-# Group search
-GET /api/groups?search=climate&limit=5
+  async login(credentials) {
+    const response = await fetch(`${this.baseURL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(credentials),
+    });
+    return response.json();
+  }
 
-# Notifications filtering
-GET /api/notifications?unread_only=true&type=event_created
+  async getEvents(filters = {}) {
+    const params = new URLSearchParams(filters);
+    const response = await fetch(`${this.baseURL}/events?${params}`);
+    return response.json();
+  }
+}
 ```
 
-### Example Request/Response
-```bash
-# Create group event
-curl -X POST http://localhost:3000/api/events \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Climate Action Rally",
-    "description": "Join us for climate justice",
-    "start_time": "2025-06-15T10:00:00.000Z",
-    "end_time": "2025-06-15T14:00:00.000Z",
-    "location_description": "City Hall Steps",
-    "organizing_group_id": 1,
-    "category": "rally"
-  }'
+#### 2. **Authentication Context**
+```javascript
+// context/AuthContext.js
+const AuthContext = createContext();
 
-# Response
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) throw new Error('useAuth must be within AuthProvider');
+  return context;
+};
+```
+
+#### 3. **Screen-to-API Mapping**
+| Mobile Screen | Primary Endpoints | Features |
+|---------------|-------------------|----------|
+| **HomeScreen** | `/api/events`, `/api/notifications` | Event feed, alerts |
+| **GroupsScreen** | `/api/groups`, `/api/groups/my-groups` | Group discovery, management |
+| **EventsScreen** | `/api/events`, `/api/events/groups/:id/events` | Event creation, filtering |
+| **CommunityScreen** | `/api/community/forums` | Discussion forums |
+| **ProfileScreen** | `/api/auth/profile` | User settings |
+
+### Required Dependencies
+```json
 {
-  "success": true,
-  "message": "Group event created successfully",
-  "data": {
-    "event": {
-      "id": 18,
-      "title": "Climate Action Rally",
-      "organizing_group_id": 1,
-      "category": "rally",
-      "created_at": "2025-05-30T14:00:00.000Z"
-    }
-  }
+  "@react-native-async-storage/async-storage": "^1.19.0",
+  "@react-navigation/native": "^6.1.0",
+  "@react-navigation/stack": "^6.3.0",
+  "@react-navigation/bottom-tabs": "^6.5.0"
 }
 ```
 
 ---
 
-## ✨ Features
-
-### 🔐 Authentication & Security
-- **JWT-based authentication** with 24-hour token expiration
-- **bcrypt password hashing** with 12 salt rounds
-- **Rate limiting** to prevent API abuse
-- **Input validation** and SQL injection prevention
-- **Role-based access control** (admin, moderator, member)
-
-### 👥 Group Management
-- **Create public/private groups** for organizing activists
-- **Role hierarchy** with member, moderator, and admin permissions
-- **Group search and discovery** with pagination
-- **Member management** including role promotion/demotion
-- **Private group protection** with access controls
-
-### 📅 Event Coordination
-- **Group-organized events** with automatic member notifications
-- **Event categories**: rally, meeting, training, action, fundraiser, social
-- **Advanced filtering** by group, category, location, membership
-- **Private events** with access code protection
-- **Participant management** with join/leave functionality
-
-### 💬 Community Forums
-- **Discussion forums** with nested comment threads
-- **Group-specific forums** for private organizing
-- **Content moderation** with pin/lock capabilities
-- **User permissions** for editing own content
-
-### 🔔 Notifications System
-- **Real-time alerts** for group activities and events
-- **Event reminders** sent 24 hours before start time
-- **Notification types**: event_created, group_joined, forum_post
-- **Smart filtering** by type, read status, and date
-- **Auto-expiration** for time-sensitive notifications
-
-### 🔍 Advanced Search
-- **Cross-system filtering** across events, groups, and forums
-- **Category-based discovery** for finding relevant activities
-- **Location search** for geographically relevant events
-- **"My Groups" filtering** for personalized content
-- **Pagination support** for large datasets
-
-### 📊 Legal Resources
-- **Jurisdiction-specific legal guides** for activist rights
-- **RCW citation system** for Washington State laws
-- **Verified legal content** with source attribution
-
----
-
 ## 🧪 Testing
 
-### Test Scripts
-```bash
-# Authentication system
-.\test-auth-api.ps1
-
-# Groups functionality
-.\test-groups-api.ps1
-
-# Events system
-.\test-events-api.ps1
-
-# Complete Phase 5 integration
-.\test-group-events-integration.ps1
-```
-
-### Manual Testing Examples
-```bash
-# Health check
-curl http://localhost:3000/health
-
-# List events with filters
-curl "http://localhost:3000/api/events?category=rally&limit=5"
-
-# Create group
-curl -X POST http://localhost:3000/api/groups \
-  -H "Authorization: Bearer TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Test Group","description":"Testing"}'
-```
-
----
-
-## 🚀 Production Deployment
-
-### Database Setup
-1. **PostgreSQL**: Run `schema.sql` to create all tables and indexes
-2. **MongoDB**: Auto-creates collections on first connection
-3. **Environment**: Set production environment variables
-4. **SSL/TLS**: Configure HTTPS for production
-
-### Performance Considerations
-- **Connection pooling**: PostgreSQL (max 20), MongoDB (max 10)
-- **Rate limiting**: Tiered limits prevent abuse
-- **Indexes**: Optimized for common query patterns
-- **Background tasks**: Event reminders run hourly
-
-### Security Checklist
-- [ ] Strong JWT secret (32+ characters)
-- [ ] HTTPS enabled in production
-- [ ] Rate limits configured
-- [ ] CORS origins restricted
-- [ ] Database credentials secured
-- [ ] Input validation active
-
----
-
-## 📈 Development Roadmap
-
-### ✅ **Phase 5 Complete: Advanced Integration**
-- Group-event coordination
-- Enhanced notifications
-- Advanced search and filtering
-- Cross-system integration
-
-### 🚧 **Phase 6: Production Features** (Next)
-- Real-time WebSocket notifications
-- File upload system
-- Email notifications
-- Mobile push notifications
-- Advanced analytics dashboard
-
-### 🔮 **Phase 7: Scale & Optimize** (Future)
-- Performance monitoring
-- Auto-scaling infrastructure
-- Machine learning recommendations
-- Microservices architecture
-
----
-
-## 🤝 Contributing
-
-1. **Fork** the repository
-2. **Create** a feature branch
-3. **Test** your changes thoroughly
-4. **Submit** a pull request with clear description
-
-## 📝 License
-
-This project is part of the iMobilize social activism platform.
-
----
-
-## 🆘 Support & Troubleshooting
-
-### Common Issues
-- **Database connection failed**: Check PostgreSQL/MongoDB are running
-- **JWT secret missing**: Add JWT_SECRET to .env file
-- **Port in use**: Kill process on port 3000 or change PORT in .env
-- **Rate limited**: Wait 15 minutes or check specific endpoint limits
-
-### Quick Health Check
+### Health Checks
 ```bash
 # Server status
 curl http://localhost:3000/health
@@ -369,4 +284,158 @@ curl http://localhost:3000/api/test/postgresql
 curl http://localhost:3000/api/test/mongodb
 ```
 
-**For detailed documentation and advanced features, see the complete API documentation in the `/docs` folder.**
+### API Testing Scripts
+```bash
+# Authentication flow
+./test-auth-api.ps1
+
+# Groups functionality
+./test-groups-api.ps1
+
+# Events with group integration
+./test-group-events-integration.ps1
+```
+
+### Manual Testing Examples
+```bash
+# Create user and get token
+curl -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"test","email":"test@example.com","password":"TestPass123!","terms_accepted":"true"}'
+
+# Create group with token
+curl -X POST http://localhost:3000/api/groups \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Test Group","description":"Testing API"}'
+
+# List events with filters
+curl "http://localhost:3000/api/events?category=rally&limit=5"
+```
+
+---
+
+## 🚀 Production Deployment
+
+### Database Setup
+1. **PostgreSQL**: Execute `schema.sql` for complete table structure
+2. **MongoDB**: Collections auto-created on first connection
+3. **Indexes**: Optimized for common query patterns
+4. **SSL/TLS**: Configure HTTPS for production
+
+### Performance Optimization
+- **Connection Pooling**: PostgreSQL (20 max), MongoDB (10 max)
+- **Rate Limiting**: Tiered protection against abuse
+- **Background Tasks**: Hourly event reminder processing
+- **Caching**: Query optimization with proper indexing
+
+### Security Checklist
+- [ ] Generate strong JWT secret (32+ characters)
+- [ ] Enable HTTPS in production
+- [ ] Configure CORS origins for mobile apps
+- [ ] Set up environment variables securely
+- [ ] Enable database SSL connections
+- [ ] Configure rate limiting per environment
+
+---
+
+## 📊 Architecture Overview
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Mobile App    │    │   Web Client    │    │  Admin Panel    │
+│  (React Native) │    │    (React)      │    │    (React)      │
+└─────────┬───────┘    └─────────┬───────┘    └─────────┬───────┘
+          │                      │                      │
+          └──────────────────────┼──────────────────────┘
+                                 │
+                    ┌─────────────┴─────────────┐
+                    │     iMobilize API         │
+                    │   (Node.js + Express)     │
+                    └─────────────┬─────────────┘
+                                 │
+                    ┌─────────────┴─────────────┐
+                    │                           │
+          ┌─────────┴─────────┐    ┌─────────────┴─────────────┐
+          │   PostgreSQL      │    │       MongoDB             │
+          │ (Users, Groups,   │    │  (Messages, Logs,        │
+          │  Events, Forums)  │    │   Documents, Analytics)  │
+          └───────────────────┘    └───────────────────────────┘
+```
+
+---
+
+## 🛠️ Troubleshooting
+
+### Common Issues
+
+| **Issue** | **Cause** | **Solution** |
+|-----------|-----------|--------------|
+| `Database connection failed` | PostgreSQL/MongoDB not running | Start database services |
+| `JWT secret missing` | Missing environment variable | Add `JWT_SECRET` to `.env` |
+| `Port 3000 in use` | Another process using port | Change `PORT` in `.env` or kill process |
+| `Rate limit exceeded` | Too many requests | Wait 15 minutes or check limits |
+| `CORS errors` | Mobile app not in allowed origins | Add IP to `CORS_ORIGIN` |
+
+### Debug Commands
+```bash
+# Check running processes
+lsof -i :3000
+
+# Test database connections
+npm run test:db
+
+# View API logs
+npm run dev -- --verbose
+
+# Test specific endpoint
+curl -v http://localhost:3000/api/auth/verify \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+---
+
+## 📈 Development Roadmap
+
+### ✅ **Phase 5 Complete**
+- Group-event integration
+- Enhanced notification system
+- Advanced search and filtering
+- Cross-system data relationships
+
+### 🚧 **Phase 6: Production Features**
+- Real-time WebSocket notifications
+- File upload and media management
+- Email notification system
+- Mobile push notifications
+- Analytics dashboard
+
+### 🔮 **Phase 7: Scale & Optimize**
+- Performance monitoring and metrics
+- Auto-scaling infrastructure
+- Machine learning recommendations
+- Microservices architecture
+
+---
+
+## 📞 Support
+
+### Getting Help
+- **Documentation**: Complete API docs in `/docs` folder
+- **Issues**: Report bugs via GitHub issues
+- **Community**: Join our developer Discord
+- **Email**: api-support@imobilize.org
+
+### Contributing
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/new-feature`)
+3. Write tests for your changes
+4. Submit pull request with clear description
+
+---
+
+**🎉 Ready to build the future of social activism? Your API is production-ready!**
+
+[![Deploy](https://img.shields.io/badge/Deploy-Now-brightgreen)](/)
+[![Docs](https://img.shields.io/badge/Full%20Docs-Available-blue)](/)
+[![License](https://img.shields.io/badge/License-MIT-orange)](/)

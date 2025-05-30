@@ -1,4 +1,4 @@
-// routes/events.js
+// routes/events.js - ENHANCED VERSION with Group Integration
 const express = require('express');
 const { body, validationResult, param, query } = require('express-validator');
 const rateLimit = require('express-rate-limit');
@@ -28,8 +28,7 @@ const createEventLimiter = rateLimit({
     error: 'CREATE_EVENT_RATE_LIMIT_EXCEEDED'
   }
 });
-
-// Validation rules - using same pattern as community.js
+// Enhanced validation rules for group events
 const eventValidation = [
   body('title')
     .isLength({ min: 3, max: 100 })
@@ -76,16 +75,32 @@ const eventValidation = [
     .optional()
     .isLength({ min: 4, max: 20 })
     .withMessage('Access code must be between 4 and 20 characters')
-    .trim()
+    .trim(),
+  
+  // NEW: Group integration fields
+  body('organizing_group_id')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Organizing group ID must be a positive integer'),
+  
+  body('group_members_only')
+    .optional()
+    .isBoolean()
+    .withMessage('group_members_only must be a boolean'),
+  
+  body('category')
+    .optional()
+    .isIn(['rally', 'meeting', 'training', 'action', 'fundraiser', 'social', 'other'])
+    .withMessage('Category must be one of: rally, meeting, training, action, fundraiser, social, other')
 ];
 
 // ===========================================
-// PHASE 1: BASIC CRUD ENDPOINTS
+// ENHANCED EVENT LISTING WITH GROUP SUPPORT
 // ===========================================
 
 /**
  * GET /api/events
- * List all public events (with pagination)
+ * List events with enhanced group filtering
  */
 router.get('/', eventsLimiter, [
   query('limit')
@@ -101,7 +116,29 @@ router.get('/', eventsLimiter, [
   query('status')
     .optional()
     .isIn(['upcoming', 'ongoing', 'completed', 'cancelled'])
-    .withMessage('Status must be upcoming, ongoing, completed, or cancelled')
+    .withMessage('Status must be upcoming, ongoing, completed, or cancelled'),
+  
+  // NEW: Group-related filters
+  query('group_id')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Group ID must be a positive integer'),
+  
+  query('my_groups_only')
+    .optional()
+    .isBoolean()
+    .withMessage('my_groups_only must be a boolean'),
+  
+  query('category')
+    .optional()
+    .isIn(['rally', 'meeting', 'training', 'action', 'fundraiser', 'social', 'other'])
+    .withMessage('Invalid category'),
+  
+  query('location')
+    .optional()
+    .isLength({ min: 2, max: 100 })
+    .withMessage('Location filter must be between 2 and 100 characters')
+    .trim()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -114,33 +151,109 @@ router.get('/', eventsLimiter, [
       });
     }
 
-    const { limit = 20, offset = 0, status = 'upcoming' } = req.query;
+    const { 
+      limit = 20, 
+      offset = 0, 
+      status = 'upcoming', 
+      group_id, 
+      my_groups_only, 
+      category,
+      location 
+    } = req.query;
+    
+    const userId = req.user ? req.user.id : null;
     const pool = getPostgreSQLPool();
 
-    // Simple, clean query - no complex joins
-    const result = await pool.query(`
+    // Build dynamic query
+    let baseQuery = `
       SELECT 
         e.id, e.title, e.description, e.start_time, e.end_time,
-        e.location_description, e.status, e.created_at,
+        e.location_description, e.status, e.created_at, e.category,
+        e.organizing_group_id, e.group_members_only,
         u.username as organizer_username,
         u.display_name as organizer_display_name,
-        COUNT(ep.id) as participant_count
+        g.name as organizing_group_name,
+        g.is_private as group_is_private,
+        COUNT(ep.id) as participant_count,
+        CASE 
+          WHEN e.organizing_group_id IS NOT NULL AND gm.user_id IS NOT NULL THEN true
+          ELSE false
+        END as user_in_organizing_group
       FROM events e
       LEFT JOIN users u ON e.organizer_id = u.id
+      LEFT JOIN groups g ON e.organizing_group_id = g.id
       LEFT JOIN event_participants ep ON e.id = ep.event_id AND ep.status = 'confirmed'
-      WHERE e.is_private = false AND e.status = $1
-      GROUP BY e.id, e.title, e.description, e.start_time, e.end_time,
-               e.location_description, e.status, e.created_at,
-               u.username, u.display_name
-      ORDER BY e.start_time ASC
-      LIMIT $2 OFFSET $3
-    `, [status, limit, offset]);
+      LEFT JOIN group_members gm ON e.organizing_group_id = gm.group_id AND gm.user_id = $1
+    `;
 
-    // Get total count for pagination
-    const countResult = await pool.query(
-      'SELECT COUNT(*) FROM events WHERE is_private = false AND status = $1',
-      [status]
-    );
+    const conditions = ['e.status = $2'];
+    const params = [userId, status];
+    let paramCount = 3;
+
+    // Privacy filtering
+    if (!userId) {
+      conditions.push('(e.is_private = false AND (e.group_members_only = false OR e.group_members_only IS NULL))');
+    } else {
+      conditions.push(`(
+        e.is_private = false OR 
+        e.organizer_id = $1 OR
+        (e.organizing_group_id IS NOT NULL AND gm.user_id IS NOT NULL)
+      )`);
+    }
+
+    // Group filtering
+    if (group_id) {
+      conditions.push(`e.organizing_group_id = $${paramCount}`);
+      params.push(group_id);
+      paramCount++;
+    }
+
+    // My groups only filter
+    if (my_groups_only === 'true' && userId) {
+      conditions.push('e.organizing_group_id IS NOT NULL AND gm.user_id IS NOT NULL');
+    }
+
+    // Category filtering
+    if (category) {
+      conditions.push(`e.category = $${paramCount}`);
+      params.push(category);
+      paramCount++;
+    }
+
+    // Location filtering
+    if (location) {
+      conditions.push(`e.location_description ILIKE $${paramCount}`);
+      params.push(`%${location}%`);
+      paramCount++;
+    }
+
+    const whereClause = conditions.length > 0 ? ` WHERE ${conditions.join(' AND ')}` : '';
+    
+    const query = baseQuery + whereClause + `
+      GROUP BY e.id, e.title, e.description, e.start_time, e.end_time,
+               e.location_description, e.status, e.created_at, e.category,
+               e.organizing_group_id, e.group_members_only,
+               u.username, u.display_name, g.name, g.is_private, gm.user_id
+      ORDER BY e.start_time ASC
+      LIMIT $${paramCount} OFFSET $${paramCount + 1}
+    `;
+
+    params.push(limit, offset);
+
+    const result = await pool.query(query, params);
+
+    // Get total count with same filters
+    let countQuery = `
+      SELECT COUNT(DISTINCT e.id) 
+      FROM events e
+      LEFT JOIN groups g ON e.organizing_group_id = g.id
+      LEFT JOIN group_members gm ON e.organizing_group_id = gm.group_id AND gm.user_id = $1
+    `;
+    
+    countQuery += whereClause;
+    const countParams = params.slice(0, -2); // Remove limit and offset
+    
+    const countResult = await pool.query(countQuery, countParams);
     const totalCount = parseInt(countResult.rows[0].count);
 
     res.json({
@@ -153,6 +266,13 @@ router.get('/', eventsLimiter, [
           limit: parseInt(limit),
           offset: parseInt(offset),
           has_more: parseInt(offset) + parseInt(limit) < totalCount
+        },
+        filters_applied: {
+          status,
+          group_id: group_id || null,
+          my_groups_only: my_groups_only === 'true',
+          category: category || null,
+          location: location || null
         }
       }
     });
@@ -167,9 +287,13 @@ router.get('/', eventsLimiter, [
   }
 });
 
+// ===========================================
+// ENHANCED EVENT CREATION WITH GROUP SUPPORT
+// ===========================================
+
 /**
  * POST /api/events
- * Create a new event (requires authentication)
+ * Create a new event with optional group organization
  */
 router.post('/', verifyToken, createEventLimiter, eventValidation, async (req, res) => {
   try {
@@ -190,37 +314,89 @@ router.post('/', verifyToken, createEventLimiter, eventValidation, async (req, r
       end_time,
       location_description,
       is_private = false,
-      access_code
+      access_code,
+      organizing_group_id,
+      group_members_only = false,
+      category = 'other'
     } = req.body;
     
     const userId = req.user.id;
     const pool = getPostgreSQLPool();
 
-    // Simple insert - no complex business logic yet
+    // If organizing group is specified, verify user permissions
+    if (organizing_group_id) {
+      const groupMember = await pool.query(
+        'SELECT role FROM group_members WHERE group_id = $1 AND user_id = $2',
+        [organizing_group_id, userId]
+      );
+
+      if (groupMember.rows.length === 0) {
+        return res.status(403).json({
+          success: false,
+          message: 'You must be a member of the group to organize events for it',
+          error: 'NOT_GROUP_MEMBER'
+        });
+      }
+
+      // Only admins and moderators can create events for groups
+      const userRole = groupMember.rows[0].role;
+      if (!['admin', 'moderator'].includes(userRole)) {
+        return res.status(403).json({
+          success: false,
+          message: 'Only group admins and moderators can organize events',
+          error: 'INSUFFICIENT_GROUP_PERMISSIONS'
+        });
+      }
+
+      // For group events, inherit some privacy settings
+      if (group_members_only) {
+        // If it's group members only, check if group is private
+        const groupInfo = await pool.query(
+          'SELECT is_private FROM groups WHERE id = $1',
+          [organizing_group_id]
+        );
+        
+        if (groupInfo.rows[0].is_private) {
+          is_private = true; // Force private for private group events
+        }
+      }
+    }
+
+    // Create event with group integration
     const result = await pool.query(`
       INSERT INTO events (
         title, description, start_time, end_time, location_description,
-        organizer_id, is_private, access_code, status, created_at, updated_at
+        organizer_id, is_private, access_code, organizing_group_id, 
+        group_members_only, category, status, created_at, updated_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'upcoming', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'upcoming', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
       RETURNING id, title, description, start_time, end_time, location_description,
-                is_private, status, created_at
+                is_private, organizing_group_id, group_members_only, category, status, created_at
     `, [
       title, description, start_time, end_time, location_description || null,
-      userId, is_private, access_code || null
+      userId, is_private, access_code || null, organizing_group_id || null,
+      group_members_only, category
     ]);
 
     const newEvent = result.rows[0];
 
-    // Automatically add organizer as participant
+    // Add organizer as participant
     await pool.query(`
       INSERT INTO event_participants (event_id, user_id, role, status, registered_at)
       VALUES ($1, $2, 'organizer', 'confirmed', CURRENT_TIMESTAMP)
     `, [newEvent.id, userId]);
 
+    // If it's a group event, notify group members
+    if (organizing_group_id) {
+      // TODO: Implement notification system
+      console.log(`📢 New group event created: ${title} for group ${organizing_group_id}`);
+    }
+
     res.status(201).json({
       success: true,
-      message: 'Event created successfully',
+      message: organizing_group_id 
+        ? 'Group event created successfully' 
+        : 'Event created successfully',
       data: {
         event: newEvent
       }
@@ -236,12 +412,28 @@ router.post('/', verifyToken, createEventLimiter, eventValidation, async (req, r
   }
 });
 
+// ===========================================
+// NEW: GROUP-SPECIFIC EVENT ENDPOINTS
+// ===========================================
+
 /**
- * GET /api/events/:id
- * Get a specific event with participants
+ * GET /api/events/groups/:groupId/events
+ * Get all events organized by a specific group
  */
-router.get('/:id', eventsLimiter, [
-  param('id').isInt({ min: 1 }).withMessage('Event ID must be a positive integer')
+router.get('/groups/:groupId/events', eventsLimiter, [
+  param('groupId').isInt({ min: 1 }).withMessage('Group ID must be a positive integer'),
+  query('status')
+    .optional()
+    .isIn(['upcoming', 'ongoing', 'completed', 'cancelled'])
+    .withMessage('Status must be upcoming, ongoing, completed, or cancelled'),
+  query('limit')
+    .optional()
+    .isInt({ min: 1, max: 50 })
+    .withMessage('Limit must be between 1 and 50'),
+  query('offset')
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage('Offset must be non-negative')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -254,95 +446,116 @@ router.get('/:id', eventsLimiter, [
       });
     }
 
-    const eventId = req.params.id;
+    const groupId = req.params.groupId;
+    const { status = 'upcoming', limit = 20, offset = 0 } = req.query;
+    const userId = req.user ? req.user.id : null;
     const pool = getPostgreSQLPool();
 
-    // Get event details
-    const eventResult = await pool.query(`
-      SELECT 
-        e.id, e.title, e.description, e.start_time, e.end_time,
-        e.location_description, e.is_private, e.access_code, e.status,
-        e.created_at, e.updated_at,
-        u.username as organizer_username,
-        u.display_name as organizer_display_name
-      FROM events e
-      LEFT JOIN users u ON e.organizer_id = u.id
-      WHERE e.id = $1
-    `, [eventId]);
+    // Check if user has access to group events
+    const groupCheck = await pool.query(
+      'SELECT is_private FROM groups WHERE id = $1',
+      [groupId]
+    );
 
-    if (eventResult.rows.length === 0) {
+    if (groupCheck.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Event not found',
-        error: 'EVENT_NOT_FOUND'
+        message: 'Group not found',
+        error: 'GROUP_NOT_FOUND'
       });
     }
 
-    const event = eventResult.rows[0];
+    const isPrivateGroup = groupCheck.rows[0].is_private;
 
-    // Check if event is private and user has access
-    if (event.is_private) {
-      // For now, just return basic info for private events
-      // TODO: Implement access code verification
-      return res.json({
-        success: true,
-        message: 'Private event - limited information',
-        data: {
-          event: {
-            id: event.id,
-            title: event.title,
-            start_time: event.start_time,
-            is_private: true
-          }
-        }
-      });
-    }
+    // For private groups, verify membership
+if (isPrivateGroup) {
+  if (!userId) {
+    return res.status(403).json({
+      success: false,
+      message: 'Authentication required for private group',
+      error: 'AUTH_REQUIRED_PRIVATE_GROUP'
+    });
+  }
+  
+  const memberCheck = await pool.query(
+    'SELECT id FROM group_members WHERE group_id = $1 AND user_id = $2',
+    [groupId, userId]
+  );
 
-    // Get participants (only for public events for now)
-    const participantsResult = await pool.query(`
+  if (memberCheck.rows.length === 0) {
+    return res.status(403).json({
+      success: false,
+      message: 'Access denied to private group events',
+      error: 'PRIVATE_GROUP_ACCESS_DENIED'
+    });
+  }
+}
+
+    // Get group events
+    const result = await pool.query(`
       SELECT 
-        ep.role, ep.status, ep.registered_at,
-        u.username, u.display_name
-      FROM event_participants ep
-      LEFT JOIN users u ON ep.user_id = u.id
-      WHERE ep.event_id = $1 AND ep.status = 'confirmed'
-      ORDER BY ep.registered_at ASC
-    `, [eventId]);
+        e.id, e.title, e.description, e.start_time, e.end_time,
+        e.location_description, e.status, e.created_at, e.category,
+        e.group_members_only, e.is_private,
+        u.username as organizer_username,
+        u.display_name as organizer_display_name,
+        COUNT(ep.id) as participant_count
+      FROM events e
+      LEFT JOIN users u ON e.organizer_id = u.id
+      LEFT JOIN event_participants ep ON e.id = ep.event_id AND ep.status = 'confirmed'
+      WHERE e.organizing_group_id = $1 AND e.status = $2
+      GROUP BY e.id, e.title, e.description, e.start_time, e.end_time,
+               e.location_description, e.status, e.created_at, e.category,
+               e.group_members_only, e.is_private, u.username, u.display_name
+      ORDER BY e.start_time ASC
+      LIMIT $3 OFFSET $4
+    `, [groupId, status, limit, offset]);
+
+    // Get total count
+    const countResult = await pool.query(
+      'SELECT COUNT(*) FROM events WHERE organizing_group_id = $1 AND status = $2',
+      [groupId, status]
+    );
+    const totalCount = parseInt(countResult.rows[0].count);
 
     res.json({
       success: true,
-      message: 'Event retrieved successfully',
+      message: 'Group events retrieved successfully',
       data: {
-        event: event,
-        participants: participantsResult.rows
+        events: result.rows,
+        pagination: {
+          total: totalCount,
+          limit: parseInt(limit),
+          offset: parseInt(offset),
+          has_more: parseInt(offset) + parseInt(limit) < totalCount
+        }
       }
     });
 
   } catch (error) {
-    console.error('Get event error:', error);
+    console.error('Get group events error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to retrieve event',
-      error: 'GET_EVENT_ERROR'
+      message: 'Failed to retrieve group events',
+      error: 'GET_GROUP_EVENTS_ERROR'
     });
   }
 });
 
-// ===========================================
-// PHASE 2: PARTICIPATION ENDPOINTS
-// ===========================================
-
 /**
- * POST /api/events/:id/join
- * Join an event (requires authentication)
+ * PUT /api/events/:id/group
+ * Assign or change the organizing group for an event (organizer only)
  */
-router.post('/:id/join', verifyToken, eventsLimiter, [
+router.put('/:id/group', verifyToken, eventsLimiter, [
   param('id').isInt({ min: 1 }).withMessage('Event ID must be a positive integer'),
-  body('access_code')
+  body('organizing_group_id')
     .optional()
-    .isLength({ min: 4, max: 20 })
-    .withMessage('Access code must be between 4 and 20 characters')
-    .trim()
+    .isInt({ min: 1 })
+    .withMessage('Organizing group ID must be a positive integer'),
+  body('group_members_only')
+    .optional()
+    .isBoolean()
+    .withMessage('group_members_only must be a boolean')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -357,16 +570,16 @@ router.post('/:id/join', verifyToken, eventsLimiter, [
 
     const eventId = req.params.id;
     const userId = req.user.id;
-    const { access_code } = req.body;
+    const { organizing_group_id, group_members_only } = req.body;
     const pool = getPostgreSQLPool();
 
-    // Check if event exists and get details
-    const eventResult = await pool.query(
-      'SELECT id, is_private, access_code, status FROM events WHERE id = $1',
+    // Verify user is the event organizer
+    const eventCheck = await pool.query(
+      'SELECT organizer_id, organizing_group_id FROM events WHERE id = $1',
       [eventId]
     );
 
-    if (eventResult.rows.length === 0) {
+    if (eventCheck.rows.length === 0) {
       return res.status(404).json({
         success: false,
         message: 'Event not found',
@@ -374,127 +587,54 @@ router.post('/:id/join', verifyToken, eventsLimiter, [
       });
     }
 
-    const event = eventResult.rows[0];
-
-    // Check if event is still upcoming
-    if (event.status !== 'upcoming') {
-      return res.status(400).json({
-        success: false,
-        message: 'Cannot join event that is not upcoming',
-        error: 'EVENT_NOT_UPCOMING'
-      });
-    }
-
-    // Check access code for private events
-    if (event.is_private && event.access_code !== access_code) {
+    if (eventCheck.rows[0].organizer_id !== userId) {
       return res.status(403).json({
         success: false,
-        message: 'Invalid access code for private event',
-        error: 'INVALID_ACCESS_CODE'
+        message: 'Only the event organizer can change group assignments',
+        error: 'NOT_EVENT_ORGANIZER'
       });
     }
 
-    // Check if user is already a participant
-    const existingParticipant = await pool.query(
-      'SELECT id FROM event_participants WHERE event_id = $1 AND user_id = $2',
-      [eventId, userId]
-    );
+    // If assigning to a group, verify user has permissions
+    if (organizing_group_id) {
+      const groupMember = await pool.query(
+        'SELECT role FROM group_members WHERE group_id = $1 AND user_id = $2',
+        [organizing_group_id, userId]
+      );
 
-    if (existingParticipant.rows.length > 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'You are already registered for this event',
-        error: 'ALREADY_REGISTERED'
-      });
+      if (groupMember.rows.length === 0 || !['admin', 'moderator'].includes(groupMember.rows[0].role)) {
+        return res.status(403).json({
+          success: false,
+          message: 'You must be a group admin or moderator to assign events to the group',
+          error: 'INSUFFICIENT_GROUP_PERMISSIONS'
+        });
+      }
     }
 
-    // Add participant
+    // Update event
     const result = await pool.query(`
-      INSERT INTO event_participants (event_id, user_id, role, status, registered_at)
-      VALUES ($1, $2, 'attendee', 'confirmed', CURRENT_TIMESTAMP)
-      RETURNING id, role, status, registered_at
-    `, [eventId, userId]);
+      UPDATE events 
+      SET organizing_group_id = $1, group_members_only = $2, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $3
+      RETURNING id, organizing_group_id, group_members_only, updated_at
+    `, [organizing_group_id || null, group_members_only || false, eventId]);
 
-    res.status(201).json({
+    res.json({
       success: true,
-      message: 'Successfully joined event',
+      message: organizing_group_id 
+        ? 'Event assigned to group successfully' 
+        : 'Event removed from group successfully',
       data: {
-        participation: result.rows[0]
+        event: result.rows[0]
       }
     });
 
   } catch (error) {
-    console.error('Join event error:', error);
+    console.error('Update event group error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to join event',
-      error: 'JOIN_EVENT_ERROR'
-    });
-  }
-});
-
-/**
- * DELETE /api/events/:id/leave
- * Leave an event (requires authentication)
- */
-router.delete('/:id/leave', verifyToken, eventsLimiter, [
-  param('id').isInt({ min: 1 }).withMessage('Event ID must be a positive integer')
-], async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        message: 'Validation failed',
-        error: 'VALIDATION_ERROR',
-        details: errors.array()
-      });
-    }
-
-    const eventId = req.params.id;
-    const userId = req.user.id;
-    const pool = getPostgreSQLPool();
-
-    // Check if user is a participant
-    const participantResult = await pool.query(
-      'SELECT id, role FROM event_participants WHERE event_id = $1 AND user_id = $2',
-      [eventId, userId]
-    );
-
-    if (participantResult.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'You are not registered for this event',
-        error: 'NOT_REGISTERED'
-      });
-    }
-
-    // Don't allow organizers to leave their own events
-    if (participantResult.rows[0].role === 'organizer') {
-      return res.status(400).json({
-        success: false,
-        message: 'Event organizers cannot leave their own events',
-        error: 'ORGANIZER_CANNOT_LEAVE'
-      });
-    }
-
-    // Remove participant
-    await pool.query(
-      'DELETE FROM event_participants WHERE event_id = $1 AND user_id = $2',
-      [eventId, userId]
-    );
-
-    res.json({
-      success: true,
-      message: 'Successfully left event'
-    });
-
-  } catch (error) {
-    console.error('Leave event error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to leave event',
-      error: 'LEAVE_EVENT_ERROR'
+      message: 'Failed to update event group assignment',
+      error: 'UPDATE_EVENT_GROUP_ERROR'
     });
   }
 });

@@ -20,7 +20,8 @@ const authRoutes = require('./routes/auth');
 const legalRoutes = require('./routes/legal');
 const communityRoutes = require('./routes/community');
 const eventsRoutes = require('./routes/events');
-const groupsRoutes = require('./routes/groups'); // NEW: Groups routes
+const groupsRoutes = require('./routes/groups');
+const { router: notificationsRoutes, createEventReminders } = require('./routes/notifications'); // NEW: Notifications
 
 // Create Express app
 const app = express();
@@ -66,17 +67,25 @@ app.use('/api/auth', authRoutes);
 app.use('/api/legal', legalRoutes);
 app.use('/api/community', communityRoutes);
 app.use('/api/events', eventsRoutes);
-app.use('/api/groups', groupsRoutes); // NEW: Groups routes
+app.use('/api/groups', groupsRoutes);
+app.use('/api/notifications', notificationsRoutes); // NEW: Notifications routes
 
 // Basic Routes
 app.get('/', (req, res) => {
   res.json({ 
     message: '🚀 iMobilize API Server is running!',
-    version: '1.1.0',
+    version: '1.5.0', // Updated version for Phase 5
     timestamp: new Date().toISOString(),
+    phase: 'Phase 5: Advanced Integration',
     databases: {
       postgresql: '✅ Connected',
       mongodb: '✅ Connected'
+    },
+    new_features: {
+      group_events: '✅ Group-Event Integration',
+      notifications: '✅ Notification System',
+      enhanced_search: '✅ Advanced Filtering',
+      event_categories: '✅ Event Categorization'
     },
     endpoints: {
       health: '/health',
@@ -101,7 +110,16 @@ app.get('/', (req, res) => {
       community_get_post: '/api/community/posts/:id',
       community_add_comment: 'POST /api/community/posts/:id/comments',
 
-      // Groups endpoints (NEW)
+      // Enhanced Events endpoints (Phase 5)
+      events_list: '/api/events',
+      events_create: 'POST /api/events',
+      events_get: '/api/events/:id',
+      events_join: 'POST /api/events/:id/join',
+      events_leave: 'DELETE /api/events/:id/leave',
+      events_group_events: '/api/events/groups/:groupId/events', // NEW
+      events_update_group: 'PUT /api/events/:id/group', // NEW
+
+      // Groups endpoints
       groups_list: '/api/groups',
       groups_create: 'POST /api/groups',
       groups_get: '/api/groups/:id',
@@ -112,7 +130,13 @@ app.get('/', (req, res) => {
       groups_members: '/api/groups/:id/members',
       groups_update_member: 'PUT /api/groups/:id/members/:userId',
       groups_remove_member: 'DELETE /api/groups/:id/members/:userId',
-      groups_my_groups: '/api/groups/my-groups'
+      groups_my_groups: '/api/groups/my-groups',
+
+      // Notifications endpoints (NEW)
+      notifications_list: '/api/notifications',
+      notifications_mark_read: 'PUT /api/notifications/:id/read',
+      notifications_mark_all_read: 'PUT /api/notifications/read-all',
+      notifications_delete: 'DELETE /api/notifications/:id'
     }
   });
 });
@@ -138,6 +162,8 @@ app.get('/health', async (req, res) => {
       status: '✅ Healthy', 
       timestamp: new Date().toISOString(),
       uptime: Math.floor(process.uptime()),
+      version: '1.5.0',
+      phase: 'Phase 5: Advanced Integration',
       databases: {
         postgresql: {
           status: '✅ Connected',
@@ -150,6 +176,12 @@ app.get('/health', async (req, res) => {
           collections: mongoStats.collections || 0,
           dataSize: mongoStats.dataSize || 0
         }
+      },
+      features: {
+        group_events: '✅ Active',
+        notifications: '✅ Active',
+        enhanced_search: '✅ Active',
+        event_categories: '✅ Active'
       }
     });
   } catch (error) {
@@ -168,7 +200,14 @@ app.get('/api/test', (req, res) => {
     message: '✅ API is working correctly!',
     environment: process.env.NODE_ENV || 'development',
     timestamp: new Date().toISOString(),
-    server: 'iMobilize API v1.1.0'
+    server: 'iMobilize API v1.5.0 - Phase 5',
+    new_features: [
+      'Group-Event Integration',
+      'Notification System',
+      'Enhanced Event Search',
+      'Event Categories',
+      'Group-based Filtering'
+    ]
   });
 });
 
@@ -270,14 +309,16 @@ app.use((req, res) => {
       'GET /api/community/posts/:id',
       'POST /api/community/posts/:id/comments',
 
-        // Events (NEW)
+      // Enhanced Events (Phase 5)
       'GET /api/events',
       'POST /api/events',
       'GET /api/events/:id',
       'POST /api/events/:id/join',
       'DELETE /api/events/:id/leave',
+      'GET /api/events/groups/:groupId/events',
+      'PUT /api/events/:id/group',
 
-       // Groups (NEW)
+      // Groups
       'GET /api/groups',
       'POST /api/groups',
       'GET /api/groups/:id',
@@ -288,7 +329,13 @@ app.use((req, res) => {
       'GET /api/groups/:id/members',
       'PUT /api/groups/:id/members/:userId',
       'DELETE /api/groups/:id/members/:userId',
-      'GET /api/groups/my-groups'
+      'GET /api/groups/my-groups',
+
+      // Notifications (NEW)
+      'GET /api/notifications',
+      'PUT /api/notifications/:id/read',
+      'PUT /api/notifications/read-all',
+      'DELETE /api/notifications/:id'
     ]
   });
 });
@@ -302,6 +349,17 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Background task for event reminders (runs every hour)
+function startEventReminderTask() {
+  setInterval(async () => {
+    try {
+      await createEventReminders();
+    } catch (error) {
+      console.error('Event reminder task failed:', error);
+    }
+  }, 60 * 60 * 1000); // Run every hour
+}
+
 // Start the server with database initialization
 async function startServer() {
   try {
@@ -314,6 +372,7 @@ async function startServer() {
       console.log(`📍 Server running on port ${PORT}`);
       console.log(`🌐 Local URL: http://localhost:${PORT}`);
       console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🚀 Phase: Phase 5 - Advanced Integration`);
       console.log(`⏰ Started at: ${new Date().toISOString()}\n`);
       
       console.log('📋 Available endpoints:');
@@ -334,7 +393,7 @@ async function startServer() {
       console.log(`   📚 GET  /api/legal/data            - Legal documents`);
       console.log(`   🧪 GET  /api/legal/test/citations  - Test RCW citations\n`);
       
-      console.log('💬 Community endpoints (NEW!):');
+      console.log('💬 Community endpoints:');
       console.log(`   📋 GET  /api/community/forums                 - List all forums`);
       console.log(`   ➕ POST /api/community/forums                 - Create new forum`);
       console.log(`   🔍 GET  /api/community/forums/:id             - Get specific forum`);
@@ -345,14 +404,16 @@ async function startServer() {
       console.log(`   ✏️  PUT  /api/community/posts/:postId/comments/:commentId - Update comment`);
       console.log(`   🗑️  DELETE /api/community/posts/:postId/comments/:commentId - Delete comment\n`);
 
-      console.log('📅 Events endpoints (NEW!):');
-      console.log(`   📋 GET  /api/events                    - List public events`);
-      console.log(`   ➕ POST /api/events                    - Create new event`);
-      console.log(`   🔍 GET  /api/events/:id                - Get specific event`);
-      console.log(`   👥 POST /api/events/:id/join           - Join an event`);
-      console.log(`   🚪 DELETE /api/events/:id/leave        - Leave an event\n`);
+      console.log('📅 Enhanced Events endpoints (Phase 5):');
+      console.log(`   📋 GET  /api/events                         - List events (enhanced filtering)`);
+      console.log(`   ➕ POST /api/events                         - Create event (with group support)`);
+      console.log(`   🔍 GET  /api/events/:id                     - Get specific event`);
+      console.log(`   👥 POST /api/events/:id/join                - Join an event`);
+      console.log(`   🚪 DELETE /api/events/:id/leave             - Leave an event`);
+      console.log(`   🎯 GET  /api/events/groups/:groupId/events  - Get group events (NEW!)`);
+      console.log(`   🔄 PUT  /api/events/:id/group               - Update event group assignment (NEW!)\n`);
 
-      console.log('👥 Groups endpoints (NEW!):');
+      console.log('👥 Groups endpoints:');
       console.log(`   📋 GET  /api/groups                         - List public groups`);
       console.log(`   ➕ POST /api/groups                         - Create new group`);
       console.log(`   🔍 GET  /api/groups/:id                     - Get specific group`);
@@ -364,10 +425,31 @@ async function startServer() {
       console.log(`   🔄 PUT  /api/groups/:id/members/:userId     - Update member role (admin only)`);
       console.log(`   ❌ DELETE /api/groups/:id/members/:userId   - Remove member (admin/mod only)`);
       console.log(`   📋 GET  /api/groups/my-groups               - Get current user's groups\n`);
+
+      console.log('🔔 Notifications endpoints (Phase 5 - NEW!):');
+      console.log(`   📋 GET  /api/notifications                  - Get user notifications`);
+      console.log(`   ✅ PUT  /api/notifications/:id/read         - Mark notification as read`);
+      console.log(`   ✅ PUT  /api/notifications/read-all         - Mark all notifications as read`);
+      console.log(`   🗑️  DELETE /api/notifications/:id           - Delete notification\n`);
       
-      console.log('🎯 Try visiting: http://localhost:3000');
-      console.log('🎯 Or test health: http://localhost:3000/health');
-      console.log('🎯 Community forums: http://localhost:3000/api/community/forums\n');
+      console.log('🎯 New Phase 5 Features:');
+      console.log(`   🎪 Group-Event Integration                  - Groups can organize events`);
+      console.log(`   🔍 Enhanced Event Search                   - Filter by group, category, location`);
+      console.log(`   🏷️  Event Categories                       - rally, meeting, training, action, etc.`);
+      console.log(`   🔔 Notification System                     - Group activity & event alerts`);
+      console.log(`   👥 Group Member Priority                   - Special access for group members\n`);
+      
+      console.log('🎯 Try these enhanced features:');
+      console.log('   🌐 Server info: http://localhost:3000');
+      console.log('   💗 Health check: http://localhost:3000/health');
+      console.log('   📅 Events with groups: http://localhost:3000/api/events?my_groups_only=true');
+      console.log('   🔔 Notifications: http://localhost:3000/api/notifications');
+      console.log('   🎪 Group events: http://localhost:3000/api/events/groups/1/events\n');
+      
+      // Start background tasks
+      console.log('⏰ Starting background tasks...');
+      startEventReminderTask();
+      console.log('✅ Event reminder task started (runs hourly)\n');
     });
     
   } catch (error) {

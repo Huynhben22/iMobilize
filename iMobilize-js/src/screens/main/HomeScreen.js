@@ -1,4 +1,5 @@
-import React from 'react';
+// src/screens/main/HomeScreen.js - Enhanced with API Integration
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -6,51 +7,197 @@ import {
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
+  RefreshControl,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
-// Mock data
-const mockEvents = [
-  {
-    id: '1',
-    title: 'Local Climate March',
-    movement: 'Bellingham Climate Activists',
-    location: 'Waypoint Park',
-    date: 'April 27',
-    feature: 'Safety Buddies Available',
-    featureIcon: 'shield-checkmark-outline',
-    featureColor: '#4CAF50',
-  },
-  {
-    id: '2',
-    title: 'Housing for All - Protest & Teach-In',
-    movement: "People's Housing Coalition",
-    location: 'Downtown Library',
-    date: 'May 3',
-    feature: 'Encrypted Group Chat Available',
-    featureIcon: 'lock-closed-outline',
-    featureColor: '#2196F3',
-  },
-  {
-    id: '3',
-    title: 'Workers Rights Fair',
-    movement: 'Western Academic Workers United',
-    location: 'Red Square',
-    date: 'May 10',
-    feature: 'Accessible Protest Options',
-    featureIcon: 'heart-outline',
-    featureColor: '#9C27B0',
-  },
-];
+import { useAuth } from '../../context/AuthContext';
+import ApiService from '../../services/Api';
 
 const HomeScreen = () => {
+  const { user } = useAuth();
+  const [events, setEvents] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [userGroups, setUserGroups] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Load data on component mount
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Load multiple data sources in parallel
+      const [eventsResponse, groupsResponse, notificationsResponse] = await Promise.all([
+        ApiService.getEvents({ limit: 10, status: 'upcoming' }),
+        ApiService.getMyGroups({ limit: 10 }),
+        ApiService.getNotifications({ limit: 5, unread_only: true })
+      ]);
+
+      if (eventsResponse.success) {
+        setEvents(eventsResponse.data.events || []);
+      }
+
+      if (groupsResponse.success) {
+        setUserGroups(groupsResponse.data.groups || []);
+      }
+
+      if (notificationsResponse.success) {
+        setNotifications(notificationsResponse.data.notifications || []);
+      }
+
+    } catch (error) {
+      console.error('Dashboard data loading error:', error);
+      setError('Failed to load dashboard data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadDashboardData();
+    setRefreshing(false);
+  };
+
+  const handleJoinEvent = async (eventId) => {
+    try {
+      const response = await ApiService.joinEvent(eventId);
+      
+      if (response.success) {
+        Alert.alert('Success', 'You have successfully joined the event!');
+        // Refresh the events to update participant count
+        await loadDashboardData();
+      } else {
+        Alert.alert('Error', response.message || 'Failed to join event');
+      }
+    } catch (error) {
+      console.error('Join event error:', error);
+      Alert.alert('Error', 'Failed to join event. Please try again.');
+    }
+  };
+
+  const formatEventDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getEventFeature = (event) => {
+    // Determine special features based on event data
+    if (event.organizing_group_id) {
+      return {
+        text: 'Group Organized',
+        icon: 'people-outline',
+        color: '#2196F3'
+      };
+    }
+    
+    if (event.is_private) {
+      return {
+        text: 'Private Event',
+        icon: 'lock-closed-outline',
+        color: '#FF9800'
+      };
+    }
+
+    if (event.category === 'rally') {
+      return {
+        text: 'Public Rally',
+        icon: 'megaphone-outline',
+        color: '#4CAF50'
+      };
+    }
+
+    if (event.category === 'training') {
+      return {
+        text: 'Educational Workshop',
+        icon: 'school-outline',
+        color: '#9C27B0'
+      };
+    }
+
+    return {
+      text: 'Open Event',
+      icon: 'calendar-outline',
+      color: '#5B5FEF'
+    };
+  };
+
+  const getCategoryIcon = (category) => {
+    const icons = {
+      rally: 'megaphone-outline',
+      meeting: 'people-outline',
+      training: 'school-outline',
+      action: 'flash-outline',
+      fundraiser: 'card-outline',
+      social: 'heart-outline',
+      other: 'calendar-outline'
+    };
+    return icons[category] || 'calendar-outline';
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.headerText}>iMobilize</Text>
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#5B5FEF" />
+          <Text style={styles.loadingText}>Loading your dashboard...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerText}>iMobilize</Text>
+        {notifications.length > 0 && (
+          <View style={styles.notificationBadge}>
+            <Text style={styles.notificationCount}>{notifications.length}</Text>
+          </View>
+        )}
       </View>
 
-      <ScrollView style={styles.scrollView}>
+      <ScrollView 
+        style={styles.scrollView}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        {/* Welcome Message */}
+        <View style={styles.welcomeContainer}>
+          <Text style={styles.welcomeText}>
+            Welcome back, {user?.display_name || user?.username}!
+          </Text>
+        </View>
+
+        {/* Error Message */}
+        {error && (
+          <View style={styles.errorContainer}>
+            <Ionicons name="alert-circle-outline" size={20} color="#F44336" />
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity onPress={loadDashboardData} style={styles.retryButton}>
+              <Text style={styles.retryText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Dashboard Section */}
         <View style={styles.dashboardContainer}>
           <View style={styles.dashboardHeader}>
@@ -63,71 +210,119 @@ const HomeScreen = () => {
           <View style={styles.statsContainer}>
             <View style={styles.statItem}>
               <Ionicons name="calendar-outline" size={24} color="#5B5FEF" />
-              <Text style={styles.statNumber}>5 Events</Text>
+              <Text style={styles.statNumber}>{events.length} Events</Text>
             </View>
             <View style={styles.statItem}>
               <Ionicons name="people-outline" size={24} color="#5B5FEF" />
-              <Text style={styles.statNumber}>8 Movements</Text>
+              <Text style={styles.statNumber}>{userGroups.length} Groups</Text>
             </View>
+            {notifications.length > 0 && (
+              <View style={styles.statItem}>
+                <Ionicons name="notifications-outline" size={24} color="#FF9800" />
+                <Text style={styles.statNumber}>{notifications.length} Alerts</Text>
+              </View>
+            )}
           </View>
         </View>
 
-        {/* Activist Feed Section */}
+        {/* Upcoming Events Section */}
         <View style={styles.feedContainer}>
-          <Text style={styles.feedTitle}>Your Activist Feed</Text>
+          <Text style={styles.feedTitle}>Upcoming Events</Text>
           <Text style={styles.feedSubtitle}>
-            Stay updated with events from movements you follow.
+            {events.length > 0 
+              ? "Discover and join activism events in your area." 
+              : "No upcoming events found. Check back later!"}
           </Text>
 
           {/* Event Cards */}
-          {mockEvents.map((event) => (
-            <View key={event.id} style={styles.eventCard}>
-              <Text style={styles.eventTitle}>{event.title}</Text>
-              <Text style={styles.eventMovement}>
-                Movement: {event.movement}
+          {events.length > 0 ? (
+            events.map((event) => {
+              const feature = getEventFeature(event);
+              
+              return (
+                <View key={event.id} style={styles.eventCard}>
+                  <View style={styles.eventHeader}>
+                    <Text style={styles.eventTitle}>{event.title}</Text>
+                    <Ionicons 
+                      name={getCategoryIcon(event.category)} 
+                      size={20} 
+                      color="#5B5FEF" 
+                    />
+                  </View>
+
+                  {event.organizing_group_name && (
+                    <Text style={styles.eventMovement}>
+                      Organized by: {event.organizing_group_name}
+                    </Text>
+                  )}
+
+                  {event.location_description && (
+                    <View style={styles.eventDetail}>
+                      <Ionicons name="location-outline" size={16} color="#666" />
+                      <Text style={styles.eventDetailText}>{event.location_description}</Text>
+                    </View>
+                  )}
+
+                  <View style={styles.eventDetail}>
+                    <Ionicons name="calendar-outline" size={16} color="#666" />
+                    <Text style={styles.eventDetailText}>
+                      {formatEventDate(event.start_time)}
+                    </Text>
+                  </View>
+
+                  <View style={styles.eventDetail}>
+                    <Ionicons name="people-outline" size={16} color="#666" />
+                    <Text style={styles.eventDetailText}>
+                      {event.participant_count || 0} attending
+                    </Text>
+                  </View>
+
+                  <View style={styles.eventDetail}>
+                    <Ionicons 
+                      name={feature.icon} 
+                      size={16} 
+                      color={feature.color} 
+                    />
+                    <Text 
+                      style={[
+                        styles.eventFeatureText, 
+                        { color: feature.color }
+                      ]}
+                    >
+                      {feature.text}
+                    </Text>
+                  </View>
+
+                  <View style={styles.eventActions}>
+                    <TouchableOpacity style={styles.moreInfoButton}>
+                      <Text style={styles.moreInfoText}>More Info</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={styles.joinButton}
+                      onPress={() => handleJoinEvent(event.id)}
+                    >
+                      <Text style={styles.joinText}>Join</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              );
+            })
+          ) : (
+            <View style={styles.emptyState}>
+              <Ionicons name="calendar-outline" size={48} color="#CCC" />
+              <Text style={styles.emptyStateText}>No events available</Text>
+              <Text style={styles.emptyStateSubtext}>
+                Check back later or create your own event!
               </Text>
-
-              <View style={styles.eventDetail}>
-                <Ionicons name="location-outline" size={16} color="#666" />
-                <Text style={styles.eventDetailText}>{event.location}</Text>
-              </View>
-
-              <View style={styles.eventDetail}>
-                <Ionicons name="calendar-outline" size={16} color="#666" />
-                <Text style={styles.eventDetailText}>{event.date}</Text>
-              </View>
-
-              <View style={styles.eventDetail}>
-                <Ionicons 
-                  name={event.featureIcon} 
-                  size={16} 
-                  color={event.featureColor} 
-                />
-                <Text 
-                  style={[
-                    styles.eventFeatureText, 
-                    { color: event.featureColor }
-                  ]}
-                >
-                  {event.feature}
-                </Text>
-              </View>
-
-              <View style={styles.eventActions}>
-                <TouchableOpacity style={styles.moreInfoButton}>
-                  <Text style={styles.moreInfoText}>More Info</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.joinButton}>
-                  <Text style={styles.joinText}>Join</Text>
-                </TouchableOpacity>
-              </View>
             </View>
-          ))}
+          )}
 
           {/* Safety Alert Banner */}
           <View style={styles.safetyAlert}>
-            <Ionicons name="alert-circle-outline" size={20} color="#4CAF50" />
-            <Text style={styles.safetyAlertText}>Safety alerts and resources available for all events</Text>
+            <Ionicons name="shield-checkmark-outline" size={20} color="#4CAF50" />
+            <Text style={styles.safetyAlertText}>
+              Safety protocols and resources available for all events
+            </Text>
           </View>
         </View>
       </ScrollView>
@@ -147,11 +342,78 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
+    flexDirection: 'row',
   },
   headerText: {
     fontSize: 22,
     fontWeight: 'bold',
     color: 'white',
+  },
+  notificationBadge: {
+    position: 'absolute',
+    right: 15,
+    backgroundColor: '#FF4444',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  notificationCount: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#666',
+  },
+  welcomeContainer: {
+    backgroundColor: 'white',
+    padding: 15,
+    margin: 10,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  welcomeText: {
+    fontSize: 16,
+    color: '#5B5FEF',
+    fontWeight: '500',
+  },
+  errorContainer: {
+    backgroundColor: '#FFEBEE',
+    padding: 15,
+    margin: 10,
+    borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  errorText: {
+    flex: 1,
+    marginLeft: 10,
+    color: '#F44336',
+    fontSize: 14,
+  },
+  retryButton: {
+    backgroundColor: '#F44336',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 5,
+  },
+  retryText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   scrollView: {
     flex: 1,
@@ -220,16 +482,24 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
+  eventHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 5,
+  },
   eventTitle: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#5B5FEF',
-    marginBottom: 5,
+    flex: 1,
+    marginRight: 10,
   },
   eventMovement: {
     fontSize: 14,
     color: '#666',
     marginBottom: 10,
+    fontStyle: 'italic',
   },
   eventDetail: {
     flexDirection: 'row',
@@ -244,6 +514,7 @@ const styles = StyleSheet.create({
   eventFeatureText: {
     fontSize: 14,
     marginLeft: 5,
+    fontWeight: '500',
   },
   eventActions: {
     flexDirection: 'row',
@@ -270,6 +541,22 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 14,
     fontWeight: 'bold',
+  },
+  emptyState: {
+    alignItems: 'center',
+    padding: 40,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: '#999',
+    marginTop: 10,
+    fontWeight: '500',
+  },
+  emptyStateSubtext: {
+    fontSize: 14,
+    color: '#CCC',
+    marginTop: 5,
+    textAlign: 'center',
   },
   safetyAlert: {
     flexDirection: 'row',

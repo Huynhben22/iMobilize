@@ -1,4 +1,4 @@
-// App.js - Complete with Real HomeScreen
+// App.js - Fixed to use MainNavigator
 import React from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -12,7 +12,7 @@ import { AuthProvider, useAuth } from './src/context/AuthContext';
 // Import screens
 import WelcomeScreen from './src/screens/main/WelcomeScreen';
 import AuthScreen from './src/screens/main/AuthScreen';
-import HomeScreen from './src/screens/main/HomeScreen';
+import MainNavigator from './src/navigation/MainNavigator'; // ← Import MainNavigator
 
 const Stack = createNativeStackNavigator();
 
@@ -43,8 +43,8 @@ const AppNavigator = () => {
         initialRouteName={isAuthenticated ? "Main" : "Welcome"}
       >
         {isAuthenticated ? (
-          // User is authenticated - show main app
-          <Stack.Screen name="Main" component={HomeScreen} />
+          // User is authenticated - show main app with tabs
+          <Stack.Screen name="Main" component={MainNavigator} />
         ) : (
           // User is not authenticated - show auth flow
           <>

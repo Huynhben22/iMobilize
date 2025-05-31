@@ -1,6 +1,6 @@
 // src/context/AuthContext.js - Updated for iMobilize API
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import ApiService from '../services/api';
+import ApiService from '../services/Api';
 
 const AuthContext = createContext();
 

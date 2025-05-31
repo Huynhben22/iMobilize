@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "iMobilize-js",
+    "name": "iMobilize",
     "slug": "iMobilize-js",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -23,7 +23,9 @@
       "edgeToEdgeEnabled": true
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "name": "iMobilize",
+      "title": "iMobilize - Creating Real Change Together"
     }
   }
 }

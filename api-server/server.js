@@ -34,12 +34,20 @@ console.log('⚙️  Setting up middleware...');
 app.use(helmet());
 console.log('✅ Helmet security headers enabled');
 
-// CORS middleware
+// CORS middleware - UPDATED to include localhost:8081
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
     ? ['https://yourdomain.com'] 
-    : ['http://localhost:19006', 'http://localhost:19000', 'http://localhost:3000'],
-  credentials: true
+    : [
+        'http://localhost:19006', 
+        'http://localhost:19000', 
+        'http://localhost:3000',
+        'http://localhost:8081',  // ← ADD THIS for web development
+        'http://localhost:3001'   // ← ADD THIS as backup
+      ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 };
 app.use(cors(corsOptions));
 console.log('✅ CORS enabled');

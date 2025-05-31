@@ -21,7 +21,7 @@ const legalRoutes = require('./routes/legal');
 const communityRoutes = require('./routes/community');
 const eventsRoutes = require('./routes/events');
 const groupsRoutes = require('./routes/groups');
-const { router: notificationsRoutes, createEventReminders } = require('./routes/notifications'); // NEW: Notifications
+const { router: notificationsRoutes, createEventReminders } = require('./routes/notifications');
 
 // Create Express app
 const app = express();
@@ -68,76 +68,17 @@ app.use('/api/legal', legalRoutes);
 app.use('/api/community', communityRoutes);
 app.use('/api/events', eventsRoutes);
 app.use('/api/groups', groupsRoutes);
-app.use('/api/notifications', notificationsRoutes); // NEW: Notifications routes
+app.use('/api/notifications', notificationsRoutes);
 
 // Basic Routes
 app.get('/', (req, res) => {
   res.json({ 
-    message: '🚀 iMobilize API Server is running!',
-    version: '1.5.0', // Updated version for Phase 5
-    timestamp: new Date().toISOString(),
+    name: 'iMobilize API',
+    version: '1.5.0',
+    status: 'running',
     phase: 'Phase 5: Advanced Integration',
-    databases: {
-      postgresql: '✅ Connected',
-      mongodb: '✅ Connected'
-    },
-    new_features: {
-      group_events: '✅ Group-Event Integration',
-      notifications: '✅ Notification System',
-      enhanced_search: '✅ Advanced Filtering',
-      event_categories: '✅ Event Categorization'
-    },
-    endpoints: {
-      health: '/health',
-      test: '/api/test',
-      postgresql_test: '/api/test/postgresql',
-      mongodb_test: '/api/test/mongodb',
-      
-      // Authentication endpoints
-      auth_register: '/api/auth/register',
-      auth_login: '/api/auth/login',
-      auth_verify: '/api/auth/verify',
-      
-      // Legal endpoints
-      legal_data: '/api/legal/data',
-      legal_test: '/api/legal/test/citations',
-      
-      // Community endpoints
-      community_forums: '/api/community/forums',
-      community_create_forum: 'POST /api/community/forums',
-      community_forum_posts: '/api/community/forums/:id/posts',
-      community_create_post: 'POST /api/community/forums/:id/posts',
-      community_get_post: '/api/community/posts/:id',
-      community_add_comment: 'POST /api/community/posts/:id/comments',
-
-      // Enhanced Events endpoints (Phase 5)
-      events_list: '/api/events',
-      events_create: 'POST /api/events',
-      events_get: '/api/events/:id',
-      events_join: 'POST /api/events/:id/join',
-      events_leave: 'DELETE /api/events/:id/leave',
-      events_group_events: '/api/events/groups/:groupId/events', // NEW
-      events_update_group: 'PUT /api/events/:id/group', // NEW
-
-      // Groups endpoints
-      groups_list: '/api/groups',
-      groups_create: 'POST /api/groups',
-      groups_get: '/api/groups/:id',
-      groups_update: 'PUT /api/groups/:id',
-      groups_delete: 'DELETE /api/groups/:id',
-      groups_join: 'POST /api/groups/:id/join',
-      groups_leave: 'DELETE /api/groups/:id/leave',
-      groups_members: '/api/groups/:id/members',
-      groups_update_member: 'PUT /api/groups/:id/members/:userId',
-      groups_remove_member: 'DELETE /api/groups/:id/members/:userId',
-      groups_my_groups: '/api/groups/my-groups',
-
-      // Notifications endpoints (NEW)
-      notifications_list: '/api/notifications',
-      notifications_mark_read: 'PUT /api/notifications/:id/read',
-      notifications_mark_all_read: 'PUT /api/notifications/read-all',
-      notifications_delete: 'DELETE /api/notifications/:id'
-    }
+    docs: '/api/test for endpoint testing',
+    health: '/health for system status'
   });
 });
 
@@ -146,7 +87,7 @@ app.get('/health', async (req, res) => {
   try {
     // Test PostgreSQL
     const pgClient = await pgPool.connect();
-    const pgResult = await pgClient.query('SELECT NOW() as current_time, current_database() as db_name');
+    const pgResult = await pgClient.query('SELECT current_database() as db_name');
     pgClient.release();
     
     // Test MongoDB
@@ -156,40 +97,23 @@ app.get('/health', async (req, res) => {
     }
     
     await mongoDatabase.admin().ping();
-    const mongoStats = await mongoDatabase.stats();
     
     res.json({ 
-      status: '✅ Healthy', 
-      timestamp: new Date().toISOString(),
-      uptime: Math.floor(process.uptime()),
+      status: 'healthy',
       version: '1.5.0',
-      phase: 'Phase 5: Advanced Integration',
       databases: {
-        postgresql: {
-          status: '✅ Connected',
-          database: pgResult.rows[0].db_name,
-          current_time: pgResult.rows[0].current_time
-        },
-        mongodb: {
-          status: '✅ Connected',
-          database: mongoDatabase.databaseName,
-          collections: mongoStats.collections || 0,
-          dataSize: mongoStats.dataSize || 0
-        }
+        postgresql: 'connected',
+        mongodb: 'connected'
       },
-      features: {
-        group_events: '✅ Active',
-        notifications: '✅ Active',
-        enhanced_search: '✅ Active',
-        event_categories: '✅ Active'
-      }
+      uptime: Math.floor(process.uptime()),
+      timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Health check failed:', error);
+    console.error('❌ Health check failed:', error.message);
     res.status(503).json({
-      status: '❌ Unhealthy',
-      timestamp: new Date().toISOString(),
-      error: error.message
+      status: 'unhealthy',
+      error: error.message,
+      timestamp: new Date().toISOString()
     });
   }
 });
@@ -197,17 +121,18 @@ app.get('/health', async (req, res) => {
 // API test route
 app.get('/api/test', (req, res) => {
   res.json({
-    message: '✅ API is working correctly!',
+    message: 'API is working correctly!',
+    version: '1.5.0',
     environment: process.env.NODE_ENV || 'development',
     timestamp: new Date().toISOString(),
-    server: 'iMobilize API v1.5.0 - Phase 5',
-    new_features: [
-      'Group-Event Integration',
-      'Notification System',
-      'Enhanced Event Search',
-      'Event Categories',
-      'Group-based Filtering'
-    ]
+    endpoints: {
+      authentication: '/api/auth/*',
+      groups: '/api/groups/*',
+      events: '/api/events/*',
+      community: '/api/community/*',
+      notifications: '/api/notifications/*',
+      legal: '/api/legal/*'
+    }
   });
 });
 
@@ -286,65 +211,17 @@ app.get('/api/test/mongodb', async (req, res) => {
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({
-    error: '❌ Route not found',
+    error: 'Route not found',
     path: req.originalUrl,
-    available_endpoints: [
-      'GET /',
-      'GET /health',
-      'GET /api/test',
-      'GET /api/test/postgresql',
-      'GET /api/test/mongodb',
-      
-      // Authentication
-      'POST /api/auth/register',
-      'POST /api/auth/login',
-      'GET /api/auth/verify',
-      
-      // Community
-      'GET /api/community/forums',
-      'POST /api/community/forums',
-      'GET /api/community/forums/:id',
-      'GET /api/community/forums/:id/posts',
-      'POST /api/community/forums/:id/posts',
-      'GET /api/community/posts/:id',
-      'POST /api/community/posts/:id/comments',
-
-      // Enhanced Events (Phase 5)
-      'GET /api/events',
-      'POST /api/events',
-      'GET /api/events/:id',
-      'POST /api/events/:id/join',
-      'DELETE /api/events/:id/leave',
-      'GET /api/events/groups/:groupId/events',
-      'PUT /api/events/:id/group',
-
-      // Groups
-      'GET /api/groups',
-      'POST /api/groups',
-      'GET /api/groups/:id',
-      'PUT /api/groups/:id',
-      'DELETE /api/groups/:id',
-      'POST /api/groups/:id/join',
-      'DELETE /api/groups/:id/leave',
-      'GET /api/groups/:id/members',
-      'PUT /api/groups/:id/members/:userId',
-      'DELETE /api/groups/:id/members/:userId',
-      'GET /api/groups/my-groups',
-
-      // Notifications (NEW)
-      'GET /api/notifications',
-      'PUT /api/notifications/:id/read',
-      'PUT /api/notifications/read-all',
-      'DELETE /api/notifications/:id'
-    ]
+    message: 'Check /api/test for available endpoints'
   });
 });
 
 // Global error handler
 app.use((err, req, res, next) => {
-  console.error('💥 Error occurred:', err);
+  console.error('💥 Server error:', err.message);
   res.status(500).json({ 
-    error: '💥 Internal server error',
+    error: 'Internal server error',
     message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
   });
 });
@@ -353,9 +230,12 @@ app.use((err, req, res, next) => {
 function startEventReminderTask() {
   setInterval(async () => {
     try {
-      await createEventReminders();
+      const reminders = await createEventReminders();
+      if (reminders > 0) {
+        console.log(`📬 Sent ${reminders} event reminders`);
+      }
     } catch (error) {
-      console.error('Event reminder task failed:', error);
+      console.error('⚠️ Event reminder task failed:', error.message);
     }
   }, 60 * 60 * 1000); // Run every hour
 }
@@ -368,107 +248,46 @@ async function startServer() {
     
     // Start HTTP server
     app.listen(PORT, () => {
-      console.log('\n🎉 iMobilize API Server started successfully!');
-      console.log(`📍 Server running on port ${PORT}`);
-      console.log(`🌐 Local URL: http://localhost:${PORT}`);
+      console.log('\n🚀 iMobilize API Server Started');
+      console.log(`📍 Port: ${PORT}`);
+      console.log(`🌐 URL: http://localhost:${PORT}`);
       console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`🚀 Phase: Phase 5 - Advanced Integration`);
-      console.log(`⏰ Started at: ${new Date().toISOString()}\n`);
+      console.log(`📅 Phase 5: Advanced Integration Complete`);
+      console.log(`⏰ ${new Date().toLocaleString()}\n`);
       
-      console.log('📋 Available endpoints:');
-      console.log(`   🏠 GET  /                          - Server status & info`);
-      console.log(`   💗 GET  /health                    - Health check with DB status`);
-      console.log(`   🧪 GET  /api/test                  - API test`);
-      console.log(`   🐘 GET  /api/test/postgresql       - PostgreSQL connection test`);
-      console.log(`   🍃 GET  /api/test/mongodb          - MongoDB connection test\n`);
+      console.log('🔗 Quick Links:');
+      console.log(`   Health Check: http://localhost:${PORT}/health`);
+      console.log(`   API Test: http://localhost:${PORT}/api/test`);
+      console.log(`   Documentation: See README.md\n`);
       
-      console.log('🔐 Authentication endpoints:');
-      console.log(`   📝 POST /api/auth/register         - User registration`);
-      console.log(`   🔐 POST /api/auth/login            - User login`);
-      console.log(`   ✅ GET  /api/auth/verify           - Token verification`);
-      console.log(`   🚪 POST /api/auth/logout           - User logout`);
-      console.log(`   👤 PUT  /api/auth/profile          - Update profile\n`);
-      
-      console.log('⚖️  Legal endpoints:');
-      console.log(`   📚 GET  /api/legal/data            - Legal documents`);
-      console.log(`   🧪 GET  /api/legal/test/citations  - Test RCW citations\n`);
-      
-      console.log('💬 Community endpoints:');
-      console.log(`   📋 GET  /api/community/forums                 - List all forums`);
-      console.log(`   ➕ POST /api/community/forums                 - Create new forum`);
-      console.log(`   🔍 GET  /api/community/forums/:id             - Get specific forum`);
-      console.log(`   📝 GET  /api/community/forums/:id/posts       - Get forum posts`);
-      console.log(`   ➕ POST /api/community/forums/:id/posts       - Create new post`);
-      console.log(`   📖 GET  /api/community/posts/:id              - Get post with comments`);
-      console.log(`   💬 POST /api/community/posts/:id/comments     - Add comment to post`);
-      console.log(`   ✏️  PUT  /api/community/posts/:postId/comments/:commentId - Update comment`);
-      console.log(`   🗑️  DELETE /api/community/posts/:postId/comments/:commentId - Delete comment\n`);
-
-      console.log('📅 Enhanced Events endpoints (Phase 5):');
-      console.log(`   📋 GET  /api/events                         - List events (enhanced filtering)`);
-      console.log(`   ➕ POST /api/events                         - Create event (with group support)`);
-      console.log(`   🔍 GET  /api/events/:id                     - Get specific event`);
-      console.log(`   👥 POST /api/events/:id/join                - Join an event`);
-      console.log(`   🚪 DELETE /api/events/:id/leave             - Leave an event`);
-      console.log(`   🎯 GET  /api/events/groups/:groupId/events  - Get group events (NEW!)`);
-      console.log(`   🔄 PUT  /api/events/:id/group               - Update event group assignment (NEW!)\n`);
-
-      console.log('👥 Groups endpoints:');
-      console.log(`   📋 GET  /api/groups                         - List public groups`);
-      console.log(`   ➕ POST /api/groups                         - Create new group`);
-      console.log(`   🔍 GET  /api/groups/:id                     - Get specific group`);
-      console.log(`   ✏️  PUT  /api/groups/:id                     - Update group (admin only)`);
-      console.log(`   🗑️  DELETE /api/groups/:id                  - Delete group (admin only)`);
-      console.log(`   👥 POST /api/groups/:id/join                - Join a group`);
-      console.log(`   🚪 DELETE /api/groups/:id/leave             - Leave a group`);
-      console.log(`   👤 GET  /api/groups/:id/members             - List group members`);
-      console.log(`   🔄 PUT  /api/groups/:id/members/:userId     - Update member role (admin only)`);
-      console.log(`   ❌ DELETE /api/groups/:id/members/:userId   - Remove member (admin/mod only)`);
-      console.log(`   📋 GET  /api/groups/my-groups               - Get current user's groups\n`);
-
-      console.log('🔔 Notifications endpoints (Phase 5 - NEW!):');
-      console.log(`   📋 GET  /api/notifications                  - Get user notifications`);
-      console.log(`   ✅ PUT  /api/notifications/:id/read         - Mark notification as read`);
-      console.log(`   ✅ PUT  /api/notifications/read-all         - Mark all notifications as read`);
-      console.log(`   🗑️  DELETE /api/notifications/:id           - Delete notification\n`);
-      
-      console.log('🎯 New Phase 5 Features:');
-      console.log(`   🎪 Group-Event Integration                  - Groups can organize events`);
-      console.log(`   🔍 Enhanced Event Search                   - Filter by group, category, location`);
-      console.log(`   🏷️  Event Categories                       - rally, meeting, training, action, etc.`);
-      console.log(`   🔔 Notification System                     - Group activity & event alerts`);
-      console.log(`   👥 Group Member Priority                   - Special access for group members\n`);
-      
-      console.log('🎯 Try these enhanced features:');
-      console.log('   🌐 Server info: http://localhost:3000');
-      console.log('   💗 Health check: http://localhost:3000/health');
-      console.log('   📅 Events with groups: http://localhost:3000/api/events?my_groups_only=true');
-      console.log('   🔔 Notifications: http://localhost:3000/api/notifications');
-      console.log('   🎪 Group events: http://localhost:3000/api/events/groups/1/events\n');
+      console.log('✅ Ready for frontend integration!');
+      console.log('📖 Check README.md for complete API documentation\n');
       
       // Start background tasks
-      console.log('⏰ Starting background tasks...');
+      console.log('⏰ Starting background services...');
       startEventReminderTask();
-      console.log('✅ Event reminder task started (runs hourly)\n');
+      console.log('✅ Event reminder service active\n');
     });
     
   } catch (error) {
-    console.error('\n💥 Failed to start server:', error.message);
-    console.error('🔧 Please check your database configuration and ensure services are running.\n');
+    console.error('\n❌ Server startup failed:', error.message);
+    console.error('💡 Check database connections and environment variables\n');
     process.exit(1);
   }
 }
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
-  console.log('\n🛑 Shutting down server gracefully...');
+  console.log('\n🛑 Shutting down gracefully...');
   await closeDatabaseConnections();
+  console.log('✅ Server stopped\n');
   process.exit(0);
 });
 
 process.on('SIGINT', async () => {
-  console.log('\n🛑 Shutting down server gracefully...');
+  console.log('\n🛑 Shutting down gracefully...');
   await closeDatabaseConnections();
+  console.log('✅ Server stopped\n');
   process.exit(0);
 });
 

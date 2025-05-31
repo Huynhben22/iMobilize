@@ -95,10 +95,6 @@ const eventValidation = [
     .withMessage('Category must be one of: rally, meeting, training, action, fundraiser, social, other')
 ];
 
-// ===========================================
-// ENHANCED EVENT LISTING WITH GROUP SUPPORT
-// ===========================================
-
 /**
  * GET /api/events
  * List events with enhanced group filtering
@@ -288,10 +284,6 @@ router.get('/', eventsLimiter, [
   }
 });
 
-// ===========================================
-// ENHANCED EVENT CREATION WITH GROUP SUPPORT
-// ===========================================
-
 /**
  * POST /api/events
  * Create a new event with optional group organization
@@ -421,10 +413,6 @@ router.post('/', verifyToken, createEventLimiter, eventValidation, async (req, r
     });
   }
 });
-
-// ===========================================
-// NEW: GROUP-SPECIFIC EVENT ENDPOINTS
-// ===========================================
 
 /**
  * GET /api/events/groups/:groupId/events
@@ -645,6 +633,312 @@ router.put('/:id/group', verifyToken, eventsLimiter, [
       success: false,
       message: 'Failed to update event group assignment',
       error: 'UPDATE_EVENT_GROUP_ERROR'
+    });
+  }
+});
+
+// Add these endpoints to your routes/events.js file
+
+/**
+ * GET /api/events/:id
+ * Get a specific event with details
+ */
+router.get('/:id', eventsLimiter, [
+  param('id').isInt({ min: 1 }).withMessage('Event ID must be a positive integer')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        error: 'VALIDATION_ERROR',
+        details: errors.array()
+      });
+    }
+
+    const eventId = req.params.id;
+    const userId = req.user ? req.user.id : null;
+    const pool = getPostgreSQLPool();
+
+    // Get event details
+    const eventResult = await pool.query(`
+      SELECT 
+        e.id, e.title, e.description, e.start_time, e.end_time,
+        e.location_description, e.status, e.created_at, e.category,
+        e.organizing_group_id, e.group_members_only, e.is_private,
+        u.username as organizer_username,
+        u.display_name as organizer_display_name,
+        g.name as organizing_group_name,
+        COUNT(ep.id) as participant_count
+      FROM events e
+      LEFT JOIN users u ON e.organizer_id = u.id
+      LEFT JOIN groups g ON e.organizing_group_id = g.id
+      LEFT JOIN event_participants ep ON e.id = ep.event_id AND ep.status = 'confirmed'
+      WHERE e.id = $1
+      GROUP BY e.id, e.title, e.description, e.start_time, e.end_time,
+               e.location_description, e.status, e.created_at, e.category,
+               e.organizing_group_id, e.group_members_only, e.is_private,
+               u.username, u.display_name, g.name
+    `, [eventId]);
+
+    if (eventResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Event not found',
+        error: 'EVENT_NOT_FOUND'
+      });
+    }
+
+    const event = eventResult.rows[0];
+
+    // Check access permissions
+    if (event.is_private && userId) {
+      // Check if user has access to private event
+      const hasAccess = await pool.query(`
+        SELECT 1 FROM event_participants ep
+        WHERE ep.event_id = $1 AND ep.user_id = $2
+        UNION
+        SELECT 1 FROM events e
+        WHERE e.id = $1 AND e.organizer_id = $2
+        UNION
+        SELECT 1 FROM events e
+        JOIN group_members gm ON e.organizing_group_id = gm.group_id
+        WHERE e.id = $1 AND gm.user_id = $2
+      `, [eventId, userId]);
+
+      if (hasAccess.rows.length === 0) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied to private event',
+          error: 'PRIVATE_EVENT_ACCESS_DENIED'
+        });
+      }
+    } else if (event.is_private) {
+      return res.status(403).json({
+        success: false,
+        message: 'Authentication required for private event',
+        error: 'AUTH_REQUIRED_PRIVATE_EVENT'
+      });
+    }
+
+    // Get user's participation status if authenticated
+    let userParticipation = null;
+    if (userId) {
+      const participationResult = await pool.query(
+        'SELECT role, status, registered_at FROM event_participants WHERE event_id = $1 AND user_id = $2',
+        [eventId, userId]
+      );
+      userParticipation = participationResult.rows[0] || null;
+    }
+
+    res.json({
+      success: true,
+      message: 'Event retrieved successfully',
+      data: {
+        event: event,
+        user_participation: userParticipation
+      }
+    });
+
+  } catch (error) {
+    console.error('Get event error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve event',
+      error: 'GET_EVENT_ERROR'
+    });
+  }
+});
+
+/**
+ * POST /api/events/:id/join
+ * Join an event
+ */
+router.post('/:id/join', verifyToken, eventsLimiter, [
+  param('id').isInt({ min: 1 }).withMessage('Event ID must be a positive integer'),
+  body('access_code')
+    .optional()
+    .isLength({ min: 4, max: 20 })
+    .withMessage('Access code must be between 4 and 20 characters')
+    .trim()
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        error: 'VALIDATION_ERROR',
+        details: errors.array()
+      });
+    }
+
+    const eventId = req.params.id;
+    const userId = req.user.id;
+    const { access_code } = req.body;
+    const pool = getPostgreSQLPool();
+
+    // Get event details
+    const eventResult = await pool.query(`
+      SELECT 
+        e.id, e.organizer_id, e.is_private, e.access_code, e.status,
+        e.organizing_group_id, e.group_members_only
+      FROM events e
+      WHERE e.id = $1
+    `, [eventId]);
+
+    if (eventResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Event not found',
+        error: 'EVENT_NOT_FOUND'
+      });
+    }
+
+    const event = eventResult.rows[0];
+
+    // Check if event is still active
+    if (event.status !== 'upcoming') {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot join event that is not upcoming',
+        error: 'EVENT_NOT_JOINABLE'
+      });
+    }
+
+    // Check if user is already participating
+    const existingParticipation = await pool.query(
+      'SELECT id, status FROM event_participants WHERE event_id = $1 AND user_id = $2',
+      [eventId, userId]
+    );
+
+    if (existingParticipation.rows.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'You are already participating in this event',
+        error: 'ALREADY_PARTICIPATING'
+      });
+    }
+
+    // Check access permissions
+    if (event.is_private && event.access_code) {
+      if (!access_code || access_code !== event.access_code) {
+        return res.status(403).json({
+          success: false,
+          message: 'Invalid access code for private event',
+          error: 'INVALID_ACCESS_CODE'
+        });
+      }
+    }
+
+    // Check group membership requirements
+    if (event.group_members_only && event.organizing_group_id) {
+      const groupMemberCheck = await pool.query(
+        'SELECT id FROM group_members WHERE group_id = $1 AND user_id = $2',
+        [event.organizing_group_id, userId]
+      );
+
+      if (groupMemberCheck.rows.length === 0) {
+        return res.status(403).json({
+          success: false,
+          message: 'This event is restricted to group members only',
+          error: 'GROUP_MEMBERS_ONLY'
+        });
+      }
+    }
+
+    // Add user as participant
+    const result = await pool.query(`
+      INSERT INTO event_participants (event_id, user_id, role, status, registered_at)
+      VALUES ($1, $2, 'attendee', 'confirmed', CURRENT_TIMESTAMP)
+      RETURNING id, role, status, registered_at
+    `, [eventId, userId]);
+
+    const participation = result.rows[0];
+
+    res.status(201).json({
+      success: true,
+      message: 'Successfully joined event',
+      data: {
+        participation: participation
+      }
+    });
+
+  } catch (error) {
+    console.error('Join event error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to join event',
+      error: 'JOIN_EVENT_ERROR'
+    });
+  }
+});
+
+/**
+ * DELETE /api/events/:id/leave
+ * Leave an event
+ */
+router.delete('/:id/leave', verifyToken, eventsLimiter, [
+  param('id').isInt({ min: 1 }).withMessage('Event ID must be a positive integer')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        error: 'VALIDATION_ERROR',
+        details: errors.array()
+      });
+    }
+
+    const eventId = req.params.id;
+    const userId = req.user.id;
+    const pool = getPostgreSQLPool();
+
+    // Check if user is participating
+    const participationResult = await pool.query(
+      'SELECT id, role FROM event_participants WHERE event_id = $1 AND user_id = $2',
+      [eventId, userId]
+    );
+
+    if (participationResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'You are not participating in this event',
+        error: 'NOT_PARTICIPATING'
+      });
+    }
+
+    const participation = participationResult.rows[0];
+
+    // Prevent organizer from leaving their own event
+    if (participation.role === 'organizer') {
+      return res.status(400).json({
+        success: false,
+        message: 'Event organizers cannot leave their own events',
+        error: 'ORGANIZER_CANNOT_LEAVE'
+      });
+    }
+
+    // Remove participation
+    await pool.query(
+      'DELETE FROM event_participants WHERE event_id = $1 AND user_id = $2',
+      [eventId, userId]
+    );
+
+    res.json({
+      success: true,
+      message: 'Successfully left event'
+    });
+
+  } catch (error) {
+    console.error('Leave event error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to leave event',
+      error: 'LEAVE_EVENT_ERROR'
     });
   }
 });

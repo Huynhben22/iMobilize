@@ -128,6 +128,8 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   const handleLogout = () => {
+    console.log('🔴 Logout button pressed!'); // ← Add this debug log
+    
     Alert.alert(
       'Logout',
       'Are you sure you want to logout?',
@@ -137,11 +139,13 @@ const ProfileScreen = ({ navigation }) => {
           text: 'Logout',
           style: 'destructive',
           onPress: async () => {
+            console.log('🔴 User confirmed logout!'); // ← Add this debug log
             try {
+              console.log('🔴 Calling AuthContext logout...'); // ← Add this debug log
               await logout();
-              // Navigation will be handled automatically by AuthContext
+              console.log('🔴 Logout completed successfully'); // ← Add this debug log
             } catch (error) {
-              console.error('Logout error:', error);
+              console.error('❌ Logout error:', error);
               Alert.alert('Error', 'Failed to logout. Please try again.');
             }
           },

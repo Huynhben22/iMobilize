@@ -312,7 +312,8 @@ const ProfileScreen = ({ navigation }) => {
 
         {/* Logout Button */}
         <View style={styles.card}>
-          <TouchableOpacity style={styles.logoutButtonFull} onPress={handleLogout}>
+          <TouchableOpacity style={styles.logoutButtonFull} 
+            onPress={handleLogout}>
             <Ionicons name="log-out-outline" size={20} color="#F44336" />
             <Text style={styles.logoutButtonText}>Logout</Text>
           </TouchableOpacity>

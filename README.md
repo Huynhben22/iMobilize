@@ -26,37 +26,129 @@ A comprehensive mobile/web application aimed at facilitating social/civic activi
 - **Database**: MongoDB and PostgreSQL
 - **End-to-End Encryption**: Signal Protocol
 
-### Prerequisites
+## Prerequisites
 
-- Node.js (v14 or higher)
-- npm (v6 or higher)
+- Node.js (v20 or higher)
+- npm (v10 or higher)
 - Expo CLI (for mobile development)
+- PostgreSQL 17+ (port 5432)
+- MongoDB 8.0+ (port 27017)
 
-## Installation & Setup
+## 🚀 Complete Setup Instructions
 
-1. Clone the repository
+### 1. Clone and Install Frontend
+
 ```bash
+# Clone the repository
 git clone https://github.com/Huynhben22/iMobilize.git
 cd iMobilize/iMobilize-js
 
-2. Install Dependencies
-```bash
+# Install dependencies
 npm install
 
-3. Install Web Dependencies
-```bash
+# Install web dependencies
 npx expo install react-dom react-native-web @expo/metro-runtime
+```
 
-4. start it
+### 2. Database Setup
+
+#### PostgreSQL Setup
+```bash
+# Install PostgreSQL (Windows/Mac)
+# Windows: Download from https://www.postgresql.org/download/windows/
+# Mac: brew install postgresql
+
+# Start PostgreSQL service
+# Windows: Use pgAdmin or Services
+# Mac: brew services start postgresql
+
+# Create database and user
+psql -U postgres -c "CREATE DATABASE imobilize;"
+psql -U postgres -c "CREATE USER imobilize_user WITH PASSWORD 'your_password';"
+psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE imobilize TO imobilize_user;"
+
+# Initialize database schema
+psql -U postgres -d imobilize -f postgres_schema.sql
+```
+
+#### MongoDB Setup
+```bash
+# Install MongoDB (Windows/Mac)
+# Windows: Download from https://www.mongodb.com/try/download/community
+# Mac: brew install mongodb-community
+
+# Start MongoDB service
+# Windows: Use MongoDB Compass or Services
+# Mac: brew services start mongodb-community
+
+# MongoDB will auto-create collections when first used
+```
+
+### 3. Backend API Setup
+
+```bash
+# Navigate to API server directory
+cd ../api-server  # or wherever your server code is located
+
+# Install server dependencies
+npm install
+
+# Create environment configuration
+cp .env.example .env
+```
+
+**Edit `.env` file with your database credentials:**
+```env
+# Server
+PORT=3000
+NODE_ENV=development
+
+# PostgreSQL
+PG_HOST=localhost
+PG_USER=imobilize_user
+PG_PASSWORD=your_password
+PG_DATABASE=imobilize
+PG_PORT=5432
+
+# MongoDB
+MONGO_URI=mongodb://localhost:27017
+MONGO_DB_NAME=imobilize
+
+# Security
+JWT_SECRET=your-super-secure-32-character-secret-key-here
+JWT_EXPIRES_IN=24h
+
+# CORS (for mobile/web apps)
+CORS_ORIGIN=http://localhost:19006,http://localhost:19000,http://localhost:3001
+```
+
+**Start the API server:**
 ```bash
 npm start
+# or for development with auto-restart:
+npm run dev
+```
 
-5.View the app using one of these methods:
+### 4. Verify Backend Setup
 
-Scan the QR code with Expo Go app on your mobile device
-Press w to open in a web browser
-Press a to open on Android (requires Android SDK setup)
-Press i to open on iOS (requires macOS and Xcode)
+```bash
+# Test server health
+curl http://localhost:3000/health
 
+# Test database connections
+curl http://localhost:3000/api/test/postgresql
+curl http://localhost:3000/api/test/mongodb
 
+# Test API endpoints
+curl http://localhost:3000/api/test
+```
 
+### 5. Start Frontend
+
+```bash
+# Go back to frontend directory
+cd ../iMobilize-js
+
+# Start the development server
+npm start
+```

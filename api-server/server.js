@@ -35,18 +35,20 @@ console.log('⚙️  Setting up middleware...');
 app.use(helmet());
 console.log('✅ Helmet security headers enabled');
 
-// CORS middleware
+// CORS middleware - UPDATED to include localhost:8081
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
     ? ['https://yourdomain.com'] 
     : [
-        'http://localhost:19006',
+        'http://localhost:19006', 
         'http://localhost:19000', 
         'http://localhost:3000',
-        'http://localhost:8081',
-        'http://localhost:3001'
+        'http://localhost:8081',  // ← For web development
+        'http://localhost:3001'   // ← As backup
       ],
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 };
 app.use(cors(corsOptions));
 console.log('✅ CORS enabled');
@@ -139,7 +141,8 @@ app.get('/api/test', (req, res) => {
       events: '/api/events/*',
       community: '/api/community/*',
       notifications: '/api/notifications/*',
-      legal: '/api/legal/*'
+      legal: '/api/legal/*',
+      'legal-test': '/api/legal-test/*'
     }
   });
 });

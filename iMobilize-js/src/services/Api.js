@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_BASE_URL = 'http://localhost:3000/api'; // Update for production
+const API_BASE_URL = 'http://localhost:3000/api';
 
 class ApiService {
   constructor() {

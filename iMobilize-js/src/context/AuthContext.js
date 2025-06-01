@@ -1,6 +1,6 @@
-// src/context/AuthContext.js - Updated for iMobilize API
+// src/context/AuthContext.js - Original Working Version
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import ApiService from '../services/api';
+import ApiService from '../services/Api';
 
 const AuthContext = createContext();
 
@@ -151,11 +151,22 @@ export const AuthProvider = ({ children }) => {
       const response = await ApiService.updateProfile(profileData);
       
       if (response.success) {
-        dispatch({
-          type: 'UPDATE_PROFILE',
-          payload: response.data.user,
-        });
-        return { success: true };
+        // Check if response contains updated user data
+        if (response.data && response.data.user) {
+          console.log('Updating user context with:', response.data.user);
+          dispatch({
+            type: 'UPDATE_PROFILE',
+            payload: response.data.user,
+          });
+        } else {
+          // If API doesn't return updated user, merge the changes manually
+          console.log('Manually updating user context with:', profileData);
+          dispatch({
+            type: 'UPDATE_PROFILE',
+            payload: profileData,
+          });
+        }
+        return { success: true, data: response.data };
       } else {
         throw new Error(response.message || 'Profile update failed');
       }

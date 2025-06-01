@@ -1,49 +1,97 @@
-import React, { useState } from 'react';
+// src/screens/main/CommunityScreen.js - Minimal API Integration
+import React, { useState, useEffect } from 'react';
 import {
-  View, Text, ScrollView, TextInput, StyleSheet, TouchableOpacity
+  View, Text, ScrollView, TextInput, StyleSheet, TouchableOpacity, ActivityIndicator, Alert
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
-const movementsData = [
-  {
-    id: 1,
-    name: 'Bellingham Climate Activists',
-    description: 'Building a sustainable future through environmental justice.',
-    members: 1247,
-    category: 'environment',
-    isFollowing: true
-  },
-  {
-    id: 2,
-    name: "Bellingham Housing Coalition",
-    description: 'Fighting for affordable housing and tenant rights.',
-    members: 892,
-    category: 'housing',
-    isFollowing: false
-  },
-  {
-    id: 3,
-    name: 'Western Academic Workers United',
-    description: 'Fair wages and working conditions for ALL academic workers at WWU',
-    members: 543,
-    category: 'labor',
-    isFollowing: true
-  },
-  {
-    id: 4,
-    name: 'WA Racial Justice Coalition',
-    description: 'We Work towards racial equity by educating each other and uniting to take action!',
-    members: 1856,
-    category: 'justice',
-    isFollowing: false
-  }
-];
+import ApiService from '../../services/Api';
 
 const CommunityScreen = ({ navigation }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
+  const [groups, setGroups] = useState([]);
+  const [myGroups, setMyGroups] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredMovements = movementsData.filter((movement) => {
+  // Load data on component mount
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      
+      // Load all groups and user's groups
+      const [allGroupsResponse, myGroupsResponse] = await Promise.all([
+        ApiService.getGroups({ limit: 50 }),
+        ApiService.getMyGroups({ limit: 50 })
+      ]);
+
+      if (allGroupsResponse.success) {
+        setGroups(allGroupsResponse.data.groups || []);
+      }
+
+      if (myGroupsResponse.success) {
+        setMyGroups(myGroupsResponse.data.groups || []);
+      }
+    } catch (error) {
+      console.error('Error loading groups:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleJoinGroup = async (groupId, groupName) => {
+    try {
+      const response = await ApiService.joinGroup(groupId);
+      
+      if (response.success) {
+        Alert.alert('Success', `Joined "${groupName}"!`);
+        loadData(); // Refresh data
+      } else {
+        Alert.alert('Error', response.message || 'Failed to join group');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to join group');
+    }
+  };
+
+  // Convert API groups to match original data structure
+  const convertedGroups = groups.map(group => ({
+    id: group.id,
+    name: group.name,
+    description: group.description || 'No description available.',
+    members: group.member_count || 0,
+    category: getCategoryFromGroup(group),
+    isFollowing: myGroups.some(myGroup => myGroup.id === group.id)
+  }));
+
+  function getCategoryFromGroup(group) {
+  if (!group.name && !group.description) return 'other';
+  
+  const text = (
+    (group.name || '') + ' ' + 
+    (group.description || '')
+  ).toLowerCase();
+  
+  if (text.includes('climate') || text.includes('environment') || text.includes('green')) {
+    return 'environment';
+  }
+  if (text.includes('housing') || text.includes('rent') || text.includes('affordable')) {
+    return 'housing';
+  }
+  if (text.includes('worker') || text.includes('labor') || text.includes('union')) {
+    return 'labor';
+  }
+  if (text.includes('justice') || text.includes('rights') || text.includes('equality')) {
+    return 'justice';
+  }
+  
+  return 'other'; // Default category for unknown
+}
+
+  const filteredMovements = convertedGroups.filter((movement) => {
     const matchesSearch =
       movement.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       movement.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -51,6 +99,15 @@ const CommunityScreen = ({ navigation }) => {
       selectedFilter === 'all' || movement.category === selectedFilter;
     return matchesSearch && matchesFilter;
   });
+
+  if (loading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#5B5FEF" />
+        <Text style={{ marginTop: 10, color: '#666' }}>Loading communities...</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container}>
@@ -95,7 +152,10 @@ const CommunityScreen = ({ navigation }) => {
             {movement.members.toLocaleString()} members • {movement.category}
           </Text>
           <View style={styles.cardButtons}>
-            <TouchableOpacity style={styles.followButton}>
+            <TouchableOpacity 
+              style={styles.followButton}
+              onPress={() => handleJoinGroup(movement.id, movement.name)}
+            >
               <Text style={styles.followText}>
                 {movement.isFollowing ? 'Following' : 'Follow'}
               </Text>

@@ -216,6 +216,54 @@ CREATE TABLE privacy_consents (
   revoked_at TIMESTAMP
 );
 
+-- Legal documents table (for storing RCW sections and legal content)
+CREATE TABLE legal_documents (
+    id SERIAL PRIMARY KEY,
+    cite VARCHAR(50) UNIQUE NOT NULL,        -- e.g., "RCW 9A.84.010"
+    title VARCHAR(500) NOT NULL,             -- Title of the legal section
+    content TEXT NOT NULL,                   -- Full legal text
+    penalty VARCHAR(200),                    -- Penalty description
+    summary TEXT,                            -- AI-generated summary for protesters
+    source_url VARCHAR(1000),                -- URL to official source
+    jurisdiction VARCHAR(100) DEFAULT 'Washington State',
+    category VARCHAR(50) DEFAULT 'protest-related',
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Legal data updates tracking (for monitoring update processes)
+CREATE TABLE legal_data_updates (
+    id SERIAL PRIMARY KEY,
+    update_type VARCHAR(100) NOT NULL,       -- 'rcw_content', 'bills', 'citations'
+    status VARCHAR(50) NOT NULL,             -- 'success', 'error', 'partial'
+    details JSONB,                           -- Store error details, counts, etc.
+    records_updated INTEGER DEFAULT 0,       -- Number of records updated
+    errors_encountered INTEGER DEFAULT 0,    -- Number of errors
+    duration_ms INTEGER,                     -- How long the update took
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Legal citations table (for storing available RCW citations from API)
+CREATE TABLE legal_citations (
+    id SERIAL PRIMARY KEY,
+    cite VARCHAR(50) UNIQUE NOT NULL,
+    title VARCHAR(500),
+    short_title VARCHAR(200),
+    is_protest_related BOOLEAN DEFAULT FALSE,
+    api_source VARCHAR(100) DEFAULT 'lawdoccitelookup.leg.wa.gov',
+    fetched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- User legal bookmarks (users can save legal sections for reference)
+CREATE TABLE user_legal_bookmarks (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) NOT NULL,
+    legal_document_id INTEGER REFERENCES legal_documents(id) NOT NULL,
+    notes TEXT,                              -- User's personal notes
+    bookmarked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, legal_document_id)
+);
+
 -- Create indexes for performance optimization
 
 -- User indexes
@@ -277,6 +325,83 @@ CREATE INDEX idx_resources_author_id ON resources(author_id);
 CREATE INDEX idx_resources_category ON resources(category);
 CREATE INDEX idx_resources_location_id ON resources(location_id);
 CREATE INDEX idx_resources_created_at ON resources(created_at);
+
+-- Legal data indexes
+CREATE INDEX idx_legal_documents_cite ON legal_documents(cite);
+CREATE INDEX idx_legal_documents_category ON legal_documents(category);
+CREATE INDEX idx_legal_documents_updated ON legal_documents(last_updated);
+CREATE INDEX idx_legal_documents_jurisdiction ON legal_documents(jurisdiction);
+
+CREATE INDEX idx_legal_updates_type ON legal_data_updates(update_type);
+CREATE INDEX idx_legal_updates_status ON legal_data_updates(status);
+CREATE INDEX idx_legal_updates_time ON legal_data_updates(last_updated);
+
+CREATE INDEX idx_legal_citations_cite ON legal_citations(cite);
+CREATE INDEX idx_legal_citations_protest ON legal_citations(is_protest_related);
+CREATE INDEX idx_legal_citations_fetched ON legal_citations(fetched_at);
+
+CREATE INDEX idx_user_bookmarks_user ON user_legal_bookmarks(user_id);
+CREATE INDEX idx_user_bookmarks_document ON user_legal_bookmarks(legal_document_id);
+
+-- Add these comments to your existing comments section:
+COMMENT ON TABLE legal_documents IS 'Legal documents and laws relevant to activism and protests';
+COMMENT ON TABLE legal_data_updates IS 'Tracking table for legal data update processes and status';
+COMMENT ON TABLE legal_citations IS 'Available legal citations from official APIs';
+COMMENT ON TABLE user_legal_bookmarks IS 'User-saved legal documents for quick reference';
+
+COMMENT ON COLUMN legal_documents.cite IS 'Official citation (e.g., RCW 9A.84.010)';
+COMMENT ON COLUMN legal_documents.penalty IS 'Associated penalty (misdemeanor, felony, etc.)';
+COMMENT ON COLUMN legal_documents.summary IS 'Protest-focused summary of the law';
+COMMENT ON COLUMN legal_data_updates.details IS 'JSON details about the update process';
+
+-- Insert initial fallback data for immediate testing
+INSERT INTO legal_documents (cite, title, content, penalty, summary, source_url, category) VALUES
+(
+    'RCW 9A.84.010',
+    'Riot',
+    '(1) A person is guilty of the crime of riot if, acting with four or more other persons, he or she knowingly and unlawfully uses or threatens to use force, or in any way participates in the use of such force, against any other person or against property. (2)(a) Except as provided in (b) of this subsection, the crime of riot is a gross misdemeanor. (b) The crime of riot is a class C felony if the actor is armed with a deadly weapon.',
+    'Gross misdemeanor (Class C felony if armed)',
+    'Defines riot as coordinated unlawful force by 5+ people. Can be a gross misdemeanor or Class C felony if armed. Important to understand group dynamics in protests.',
+    'https://app.leg.wa.gov/RCW/default.aspx?cite=9A.84.010',
+    'protest-related'
+),
+(
+    'RCW 9A.84.020',
+    'Failure to disperse',
+    'A person is guilty of failure to disperse if he or she congregates with a group of four or more other persons and in connection with and as a part of the group refuses or fails to disperse when ordered to do so by a peace officer.',
+    'Misdemeanor',
+    'Requires dispersal when ordered by police if in groups of 5+. Know your rights but understand legal obligations when police issue lawful dispersal orders.',
+    'https://app.leg.wa.gov/RCW/default.aspx?cite=9A.84.020',
+    'protest-related'
+),
+(
+    'RCW 9A.84.030',
+    'Disorderly conduct',
+    'A person is guilty of disorderly conduct if the person: (a) Uses abusive language and thereby intentionally creates a risk of assault; (b) Intentionally disrupts any lawful assembly or meeting of persons without lawful authority; (c) Intentionally obstructs vehicular or pedestrian traffic without lawful authority.',
+    'Misdemeanor',
+    'Disorderly conduct can apply to protests. Avoid abusive language, disrupting lawful assemblies, or obstructing traffic without permits.',
+    'https://app.leg.wa.gov/RCW/default.aspx?cite=9A.84.030',
+    'protest-related'
+),
+(
+    'RCW 46.61.250',
+    'Pedestrians on roadways',
+    'No pedestrian shall unnecessarily stop or delay traffic while upon the part of a highway intended for vehicular traffic.',
+    'Traffic infraction',
+    'Blocking traffic can result in citations. Plan protest routes on sidewalks or obtain proper permits for street demonstrations.',
+    'https://app.leg.wa.gov/RCW/default.aspx?cite=46.61.250',
+    'protest-related'
+),
+(
+    'RCW 9A.52.070',
+    'Criminal trespass in the first degree',
+    'A person is guilty of criminal trespass in the first degree if he or she knowingly enters or remains unlawfully in a building.',
+    'Gross misdemeanor',
+    'Trespassing laws apply to protests on private property. Know property boundaries and obtain permission when necessary.',
+    'https://app.leg.wa.gov/RCW/default.aspx?cite=9A.52.070',
+    'protest-related'
+)
+ON CONFLICT (cite) DO NOTHING;
 
 -- Add comments for documentation
 COMMENT ON TABLE groups IS 'Groups for organizing activists and coordinating activities';

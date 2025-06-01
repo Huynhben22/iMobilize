@@ -25,6 +25,8 @@ cp .env.example .env
 # 4. Initialize database
 psql -U postgres -c "CREATE DATABASE imobilize;"
 psql -U postgres -d imobilize -f postgres_schema.sql
+psql -U postgres -d imobilize -f legal_schema.sql
+
 
 # 5. Start server
 npm run dev

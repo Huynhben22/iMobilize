@@ -1,4 +1,3 @@
-// routes/legal.js - FIXED VERSION
 const express = require('express');
 const { LegalDataManager } = require('../services/LegalDataManager');
 const { WashingtonLegalService } = require('../services/WashingtonLegalService');

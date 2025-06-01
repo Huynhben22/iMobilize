@@ -1,4 +1,3 @@
-// src/services/api.js - Updated for your iMobilize API
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_BASE_URL = 'http://localhost:3000/api'; // Update for production

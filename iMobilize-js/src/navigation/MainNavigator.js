@@ -1,20 +1,28 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { View, Text } from 'react-native';
 
 // Import screens
 import HomeScreen from '../screens/main/HomeScreen';
-import AuthScreen from '../screens/main/AuthScreen';
-
-import CommunityScreen from '../screens/main/CommunityScreen'
-
-import ResourcesScreen from '../screens/main/ResourcesScreen';
+import CommunityScreen from '../screens/main/CommunityScreen';
 import OrganizerScreen from '../screens/main/OrganizerScreen';
-
-import ProfileScreen from '../screens/main/ProfileScreen'
+import ProfileScreen from '../screens/main/ProfileScreen';
+import ResourcesScreen from '../screens/main/ResourcesScreen';
+import LawDetailScreen from '../screens/main/LawDetailScreen';
 
 const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
+
+// Create a stack navigator for the Resources tab
+const ResourcesStack = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="ResourcesList" component={ResourcesScreen} />
+      <Stack.Screen name="LawDetail" component={LawDetailScreen} />
+    </Stack.Navigator>
+  );
+};
 
 const MainNavigator = () => {
   return (
@@ -45,7 +53,7 @@ const MainNavigator = () => {
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Resources" component={ResourcesScreen} />
+      <Tab.Screen name="Resources" component={ResourcesStack} />
       <Tab.Screen name="Community" component={CommunityScreen} />
       <Tab.Screen name="Organizer" component={OrganizerScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />

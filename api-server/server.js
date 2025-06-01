@@ -22,6 +22,7 @@ const communityRoutes = require('./routes/community');
 const eventsRoutes = require('./routes/events');
 const groupsRoutes = require('./routes/groups');
 const { router: notificationsRoutes, createEventReminders } = require('./routes/notifications');
+const legalTestRoutes = require('./routes/legal-test');
 
 // Create Express app
 const app = express();
@@ -38,7 +39,13 @@ console.log('✅ Helmet security headers enabled');
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
     ? ['https://yourdomain.com'] 
-    : ['http://localhost:19006', 'http://localhost:19000', 'http://localhost:3000'],
+    : [
+        'http://localhost:19006',
+        'http://localhost:19000', 
+        'http://localhost:3000',
+        'http://localhost:8081',
+        'http://localhost:3001'
+      ],
   credentials: true
 };
 app.use(cors(corsOptions));
@@ -69,6 +76,7 @@ app.use('/api/community', communityRoutes);
 app.use('/api/events', eventsRoutes);
 app.use('/api/groups', groupsRoutes);
 app.use('/api/notifications', notificationsRoutes);
+app.use('/api/legal-test', legalTestRoutes);
 
 // Basic Routes
 app.get('/', (req, res) => {

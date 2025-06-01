@@ -67,17 +67,29 @@ const CommunityScreen = ({ navigation }) => {
     isFollowing: myGroups.some(myGroup => myGroup.id === group.id)
   }));
 
-  // Simple category detection based on group name/description
   function getCategoryFromGroup(group) {
-    const text = (group.name + ' ' + (group.description || '')).toLowerCase();
-    
-    if (text.includes('climate') || text.includes('environment')) return 'environment';
-    if (text.includes('housing')) return 'housing';
-    if (text.includes('worker') || text.includes('labor')) return 'labor';
-    if (text.includes('justice') || text.includes('rights')) return 'justice';
-    
-    return 'environment'; // default category
+  if (!group.name && !group.description) return 'other';
+  
+  const text = (
+    (group.name || '') + ' ' + 
+    (group.description || '')
+  ).toLowerCase();
+  
+  if (text.includes('climate') || text.includes('environment') || text.includes('green')) {
+    return 'environment';
   }
+  if (text.includes('housing') || text.includes('rent') || text.includes('affordable')) {
+    return 'housing';
+  }
+  if (text.includes('worker') || text.includes('labor') || text.includes('union')) {
+    return 'labor';
+  }
+  if (text.includes('justice') || text.includes('rights') || text.includes('equality')) {
+    return 'justice';
+  }
+  
+  return 'other'; // Default category for unknown
+}
 
   const filteredMovements = convertedGroups.filter((movement) => {
     const matchesSearch =

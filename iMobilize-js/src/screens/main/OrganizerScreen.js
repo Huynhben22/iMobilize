@@ -162,7 +162,7 @@ const OrganizerScreen = ({ navigation }) => {
     date.setDate(date.getDate() + daysFromNow);
     date.setHours(hour, 0, 0, 0);
     return date.toISOString();
-  };
+};
 
   if (loading) {
     return (

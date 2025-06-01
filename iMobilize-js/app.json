@@ -1,31 +1,33 @@
 {
   "expo": {
     "name": "iMobilize",
-    "slug": "iMobilize-js",
+    "slug": "imobilize",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "extra": {
+      "apiUrl": "http://localhost:3000/api"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "edgeToEdgeEnabled": true
+        "backgroundColor": "#FFFFFF"
+      }
     },
     "web": {
-      "favicon": "./assets/favicon.png",
-      "name": "iMobilize",
-      "title": "iMobilize - Creating Real Change Together"
+      "favicon": "./assets/favicon.png"
     }
   }
 }

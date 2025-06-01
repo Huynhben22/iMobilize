@@ -23,6 +23,7 @@ const HomeScreen = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
+  const [joinedEvents, setJoinedEvents] = useState(new Set());
 
   // Load data on component mount
   useEffect(() => {
@@ -69,18 +70,30 @@ const HomeScreen = () => {
 
   const handleJoinEvent = async (eventId) => {
     try {
+      console.log('🎫 Attempting to join event:', eventId);
+      
       const response = await ApiService.joinEvent(eventId);
       
-      if (response.success) {
-        Alert.alert('Success', 'You have successfully joined the event!');
-        // Refresh the events to update participant count
+      if (response && response.success) {
+        // Add to joined events
+        setJoinedEvents(prev => new Set([...prev, eventId]));
+        Alert.alert('Success! 🎉', 'You have successfully joined the event!');
         await loadDashboardData();
       } else {
-        Alert.alert('Error', response.message || 'Failed to join event');
+        Alert.alert('Error', response?.message || 'Failed to join event');
       }
     } catch (error) {
-      console.error('Join event error:', error);
-      Alert.alert('Error', 'Failed to join event. Please try again.');
+      console.error('❌ Join event error:', error);
+      
+      const errorMessage = error.message || '';
+      
+      // If already participating, mark as joined (no error message)
+      if (errorMessage.includes('already participating')) {
+        setJoinedEvents(prev => new Set([...prev, eventId]));
+        console.log('✅ Event marked as already joined');
+      } else {
+        Alert.alert('Error', errorMessage || 'Unable to join event. Please try again.');
+      }
     }
   };
 
@@ -298,10 +311,19 @@ const HomeScreen = () => {
                       <Text style={styles.moreInfoText}>More Info</Text>
                     </TouchableOpacity>
                     <TouchableOpacity 
-                      style={styles.joinButton}
+                      style={[
+                        styles.joinButton,
+                        joinedEvents.has(event.id) && styles.joinedButton
+                      ]}
                       onPress={() => handleJoinEvent(event.id)}
+                      disabled={joinedEvents.has(event.id)}
                     >
-                      <Text style={styles.joinText}>Join</Text>
+                      <Text style={[
+                        styles.joinText,
+                        joinedEvents.has(event.id) && styles.joinedText
+                      ]}>
+                        {joinedEvents.has(event.id) ? 'Joined ✓' : 'Join'}
+                      </Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -538,6 +560,17 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   joinText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  joinedButton: {
+  backgroundColor: '#4CAF50',
+  paddingVertical: 8,
+  paddingHorizontal: 20,
+  borderRadius: 5,
+  },
+  joinedText: {
     color: 'white',
     fontSize: 14,
     fontWeight: 'bold',

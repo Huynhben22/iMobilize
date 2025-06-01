@@ -45,54 +45,54 @@ const ProfileScreen = ({ navigation }) => {
   }, [user]);
 
   const loadProfileData = async () => {
-    try {
-      setLoading(true);
-      
-      // Load user's groups and events for stats (using valid limits)
-      const [groupsResponse, eventsResponse] = await Promise.all([
-        ApiService.getMyGroups({ limit: 50 }),
-        ApiService.getEvents({ limit: 50, status: 'upcoming' }) // Use same params as HomeScreen
-      ]);
-
-      console.log('Groups response:', groupsResponse); // Debug log
-      console.log('Groups data:', groupsResponse.data); // Debug log
-
-      // Update stats
-      const groupsCount = groupsResponse.success ? groupsResponse.data.groups?.length || 0 : 0;
-      // For now, we'll use a placeholder for events joined since we don't track that yet
-      const eventsCount = 0; // TODO: When we add event participants tracking
-      
-      console.log('Setting groups count to:', groupsCount); // Debug log
-      
-      setStats({
-        eventsJoined: eventsCount,
-        groupsJoined: groupsCount,
-        resourcesSaved: 0, // TODO: When we add saved resources feature
-      });
-
-      // Set profile data from user context
-      if (user) {
-        setProfile({
-          name: user.display_name || user.username || '',
-          username: `@${user.username}` || '',
-          bio: user.bio || 'Passionate about making a difference!',
-          location: user.location || 'Location not set',
-          joinedDate: user.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { 
-            month: 'long', 
-            year: 'numeric' 
-          }) : 'Recently',
-          privacy_level: user.privacy_level || 'standard',
-          notifications: true,
-          locationSharing: true,
-        });
-      }
-    } catch (error) {
-      console.error('Error loading profile data:', error);
-    } finally {
-      setLoading(false);
+  try {
+    setLoading(true);
+    
+    // Load user's groups with proper error handling
+    const groupsResponse = await ApiService.getMyGroups({ limit: 50 });
+    
+    let groupsCount = 0;
+    if (groupsResponse && groupsResponse.success && groupsResponse.data && groupsResponse.data.groups) {
+      groupsCount = groupsResponse.data.groups.length;
+      console.log('✅ Groups loaded:', groupsCount);
+    } else {
+      console.log('⚠️ No groups found or API error');
     }
-  };
+    
+    setStats({
+      eventsJoined: 0, // TODO: Implement when event participants are tracked
+      groupsJoined: groupsCount,
+      resourcesSaved: 0, // TODO: Implement saved resources
+    });
 
+    // Set profile data safely
+    if (user) {
+      setProfile({
+        name: user.display_name || user.username || '',
+        username: `@${user.username}` || '',
+        bio: user.bio || 'Passionate about making a difference!',
+        location: user.location || 'Location not set',
+        joinedDate: user.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { 
+          month: 'long', 
+          year: 'numeric' 
+        }) : 'Recently',
+        privacy_level: user.privacy_level || 'standard',
+        notifications: true,
+        locationSharing: true,
+      });
+    }
+  } catch (error) {
+    console.error('❌ Error loading profile data:', error);
+    // Set default values on error
+    setStats({
+      eventsJoined: 0,
+      groupsJoined: 0,
+      resourcesSaved: 0,
+    });
+  } finally {
+    setLoading(false);
+  }
+};
   const handleSaveProfile = async () => {
     try {
       setSaving(true);

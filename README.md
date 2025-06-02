@@ -26,74 +26,129 @@ A comprehensive mobile/web application aimed at facilitating social/civic activi
 - **Database**: MongoDB and PostgreSQL
 - **End-to-End Encryption**: Signal Protocol
 
-### Prerequisites
+## Prerequisites
 
-- Node.js (v14 or higher)
-- npm (v6 or higher)
+- Node.js (v20 or higher)
+- npm (v10 or higher)
 - Expo CLI (for mobile development)
+- PostgreSQL 17+ (port 5432)
+- MongoDB 8.0+ (port 27017)
 
-# imobilize-mobile
+## 🚀 Complete Setup Instructions
 
-## Project Structure
+### 1. Clone and Install Frontend
 
-- **App.js** - Entry point
-- **app.json** - Expo configuration
-- **babel.config.js** - Babel configuration
-- **package.json** - Dependencies
-- **.gitignore** - Git ignore file
+```bash
+# Clone the repository
+git clone https://github.com/Huynhben22/iMobilize.git
+cd iMobilize/iMobilize-js
 
-### assets/
-- **images/**
-  - logo.png - App logo
-- **fonts/** - Custom fonts
+# Install dependencies
+npm install
 
-### src/
-#### components/
-- **common/** - Common UI components
-  - Button.js
-  - Card.js
-  - Header.js
-- **auth/** - Authentication components
-  - LoginForm.js
-  - RegisterForm.js
-- **dashboard/** - Dashboard components
-  - DashboardStats.js
-  - EventCard.js
-  - ActivistFeed.js
+# Install web dependencies
+npx expo install react-dom react-native-web @expo/metro-runtime
+```
 
-#### screens/
-- **onboarding/**
-  - SplashScreen.js - Initial splash screen
-  - TermsScreen.js - Terms of service screen
-  - WelcomeScreen.js - Welcome introduction
-- **auth/**
-  - LoginScreen.js - Login screen
-  - RegisterScreen.js - Registration screen
-- **main/**
-  - HomeScreen.js - Dashboard/home screen
-  - ResourcesScreen.js - Educational resources
-  - CommunityScreen.js - Community features
-  - OrganizerScreen.js - Event organization
-  - ProfileScreen.js - User profile
+### 2. Database Setup
 
-#### navigation/
-- AppNavigator.js - Main navigator (handles auth state)
-- AuthNavigator.js - Authentication flow
-- MainNavigator.js - Main app tabs
-- OnboardingNavigator.js - Onboarding flow (ToS)
+#### PostgreSQL Setup
+```bash
+# Install PostgreSQL (Windows/Mac)
+# Windows: Download from https://www.postgresql.org/download/windows/
+# Mac: brew install postgresql
 
-#### context/
-- AuthContext.js - Auth state management
-- OnboardingContext.js - Tracks ToS acceptance
+# Start PostgreSQL service
+# Windows: Use pgAdmin or Services
+# Mac: brew services start postgresql
 
-#### services/
-- api.js - API configuration
-- storage.js - Local storage utilities
+# Create database and user
+psql -U postgres -c "CREATE DATABASE imobilize;"
+psql -U postgres -c "CREATE USER imobilize_user WITH PASSWORD 'your_password';"
+psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE imobilize TO imobilize_user;"
 
-#### utils/
-- constants.js - App constants
-- validation.js - Form validation
+# Initialize database schema
+psql -U postgres -d imobilize -f postgres_schema.sql
+```
 
-#### data/
-- mockEvents.js - Mock event data for development
-- termsOfService.js - ToS content
+#### MongoDB Setup
+```bash
+# Install MongoDB (Windows/Mac)
+# Windows: Download from https://www.mongodb.com/try/download/community
+# Mac: brew install mongodb-community
+
+# Start MongoDB service
+# Windows: Use MongoDB Compass or Services
+# Mac: brew services start mongodb-community
+
+# MongoDB will auto-create collections when first used
+```
+
+### 3. Backend API Setup
+
+```bash
+# Navigate to API server directory
+cd ../api-server  # or wherever your server code is located
+
+# Install server dependencies
+npm install
+
+# Create environment configuration
+cp .env.example .env
+```
+
+**Edit `.env` file with your database credentials:**
+```env
+# Server
+PORT=3000
+NODE_ENV=development
+
+# PostgreSQL
+PG_HOST=localhost
+PG_USER=imobilize_user
+PG_PASSWORD=your_password
+PG_DATABASE=imobilize
+PG_PORT=5432
+
+# MongoDB
+MONGO_URI=mongodb://localhost:27017
+MONGO_DB_NAME=imobilize
+
+# Security
+JWT_SECRET=your-super-secure-32-character-secret-key-here
+JWT_EXPIRES_IN=24h
+
+# CORS (for mobile/web apps)
+CORS_ORIGIN=http://localhost:19006,http://localhost:19000,http://localhost:3001
+```
+
+**Start the API server:**
+```bash
+npm start
+# or for development with auto-restart:
+npm run dev
+```
+
+### 4. Verify Backend Setup
+
+```bash
+# Test server health
+curl http://localhost:3000/health
+
+# Test database connections
+curl http://localhost:3000/api/test/postgresql
+curl http://localhost:3000/api/test/mongodb
+
+# Test API endpoints
+curl http://localhost:3000/api/test
+```
+
+### 5. Start Frontend
+
+```bash
+# Go back to frontend directory
+cd ../iMobilize-js
+
+# Start the development server
+npm start
+```

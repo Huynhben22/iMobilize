@@ -151,6 +151,9 @@ LOG_FILE=logs/app.log
 API_BASE_URL=http://localhost:3000/api
 API_TIMEOUT=10000
 DEBUG_MODE=true
+```
+
+### 4. Verify Backend Setup
 
 **Start the API server:**
 ```bash
@@ -159,8 +162,7 @@ npm start
 npm run dev
 ```
 
-### 4. Verify Backend Setup
-
+**Test API Server Conncections**
 ```bash
 # Test server health
 curl http://localhost:3000/health

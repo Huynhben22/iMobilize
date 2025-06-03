@@ -100,6 +100,7 @@ cp .env.example .env
 **Edit `.env` file with your database credentials:**
 *Copy this whole bit into a .env file and update the PG password*
 
+```env
 # Server Configuration
 PORT=3000
 NODE_ENV=development

@@ -36,7 +36,7 @@ const AppNavigator = () => {
     <NavigationContainer>
       <Stack.Navigator 
         screenOptions={{ headerShown: false }}
-        initialRouteName={isAuthenticated ? "Main" : "Welcome"}
+        initialRouteName={isAuthenticated ? "Main" : "Main"}
       >
         {isAuthenticated ? (
           // User is authenticated - show main app
@@ -44,8 +44,7 @@ const AppNavigator = () => {
         ) : (
           // User is not authenticated - show auth flow
           <>
-            <Stack.Screen name="Welcome" component={WelcomeScreen} />
-            <Stack.Screen name="Auth" component={AuthScreen} />
+            <Stack.Screen name="Main" component={MainNavigator} />
           </>
         )}
       </Stack.Navigator>

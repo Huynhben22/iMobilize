@@ -11,7 +11,8 @@ import OrganizerScreen from '../screens/main/OrganizerScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
 import ResourcesScreen from '../screens/main/ResourcesScreen';
 import LawDetailScreen from '../screens/main/LawDetailScreen';
-
+import EventViewScreen from '../screens/main/EventViewScreen';
+import CommunityViewScreen from '../screens/main/CommunityViewScreen';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
@@ -42,7 +43,7 @@ const MainNavigator = () => {
             iconName = focused ? 'library' : 'library-outline';
           } else if (route.name === 'Profile') {
             iconName = focused ? 'person' : 'person-outline';
-          }
+          } 
 
           return <Ionicons name={iconName} size={size} color={color} />;
         },
@@ -98,7 +99,24 @@ const MainNavigator = () => {
           tabBarLabel: 'Profile',
         }}
       />
+
+      <Tab.Screen 
+        name="EventViewScreen" 
+        component={EventViewScreen}
+        options={{
+          tabBarLabel: 'EventViewScreen',
+        }}
+      />
+      <Tab.Screen 
+        name="CommunityViewScreen" 
+        component={CommunityViewScreen}
+        options={{
+          tabBarLabel: 'CommunityViewScreen',
+        }}
+      />
     </Tab.Navigator>
+
+      
   );
 };
 

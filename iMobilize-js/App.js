@@ -12,7 +12,7 @@ import { AuthProvider, useAuth } from './src/context/AuthContext';
 // Import screens
 import WelcomeScreen from './src/screens/main/WelcomeScreen';
 import AuthScreen from './src/screens/main/AuthScreen';
-import MainNavigator from './src/navigation/MainNavigator'; // ← Import MainNavigator
+import MainNavigator from './src/navigation/MainNavigator'; 
 
 const Stack = createNativeStackNavigator();
 
@@ -40,7 +40,7 @@ const AppNavigator = () => {
     <NavigationContainer>
       <Stack.Navigator 
         screenOptions={{ headerShown: false }}
-        initialRouteName={isAuthenticated ? "Main" : "Welcome"}
+        initialRouteName={isAuthenticated ? "Main" : "Main"}
       >
         {isAuthenticated ? (
           // User is authenticated - show main app with tabs
@@ -48,8 +48,7 @@ const AppNavigator = () => {
         ) : (
           // User is not authenticated - show auth flow
           <>
-            <Stack.Screen name="Welcome" component={WelcomeScreen} />
-            <Stack.Screen name="Auth" component={AuthScreen} />
+            <Stack.Screen name="Main" component={MainNavigator} />
           </>
         )}
       </Stack.Navigator>

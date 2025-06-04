@@ -1,4 +1,4 @@
-// src/navigation/MainNavigator.js - Updated with Community Tab
+// src/navigation/MainNavigator.js - REVERTED (remove invalid tab screens)
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,7 +7,6 @@ import { Ionicons } from '@expo/vector-icons';
 import HomeScreen from '../screens/main/HomeScreen';
 import CommunityScreen from '../screens/main/CommunityScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
-// Import other screens as needed
 import OrganizerScreen from '../screens/main/OrganizerScreen';
 import ResourcesScreen from '../screens/main/ResourcesScreen';
 
@@ -81,7 +80,6 @@ const MainNavigator = () => {
         }}
       />
      
-      
       <Tab.Screen 
         name="Profile" 
         component={ProfileScreen}

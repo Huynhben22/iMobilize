@@ -1,4 +1,4 @@
-// App.js - Fixed to use MainNavigator
+// App.js - REVERTED to working version (undo teammate's auth bypass)
 import React from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';

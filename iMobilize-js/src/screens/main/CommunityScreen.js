@@ -162,7 +162,7 @@ const CommunityScreen = ({ navigation }) => {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.viewButton}
-              onPress={() => navigation.navigate('MovementPage', { movement })}
+              onPress={() => navigation.navigate('CommunityViewScreen', { movement })}
             >
               <Text style={styles.viewText}>View Movement</Text>
             </TouchableOpacity>

@@ -515,25 +515,34 @@
     </section>
 
     
-<!-- Demo Section -->
     <section id="demo" class="demo-section">
         <div class="container">
             <h2>Application Demo</h2>
             <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 50px; align-items: start;">
                 <div class="demo-video-container">
+                    <!-- Direct Google Drive Video Embed -->
                     <video 
                         class="demo-video"
                         controls 
-                        preload="metadata"
-                        poster="photos/imobilize-thumbnail.png">
-                        <source src="photos/imobilize-demo.mp4" type="video/mp4">
+                        preload="metadata">
+                        <source src="https://drive.google.com/uc?export=download&id=1KR6aifMtCYbDNrB9YlcPFabNBMFzLLwx" type="video/mp4">
                         <!-- Fallback for browsers that don't support video -->
                         <div style="height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #64748b; background: linear-gradient(135deg, #e2e8f0, #cbd5e1);">
                             <i class="fas fa-video" style="font-size: 4rem; margin-bottom: 20px; color: #5B5FEF;"></i>
                             <p style="font-size: 1.2rem; margin-bottom: 10px;">Video not supported in this browser</p>
-                            <a href="photos/imobilize-demo.mp4" download style="color: #5B5FEF; text-decoration: none;">Download Demo Video</a>
+                            <a href="https://drive.google.com/file/d/1KR6aifMtCYbDNrB9YlcPFabNBMFzLLwx/view?usp=sharing" target="_blank" style="color: #5B5FEF; text-decoration: none;">Watch on Google Drive</a>
                         </div>
                     </video>
+                    
+                    <!-- Backup link -->
+                    <div style="margin-top: 15px; text-align: center;">
+                        <a href="https://drive.google.com/file/d/1KR6aifMtCYbDNrB9YlcPFabNBMFzLLwx/view?usp=sharing" 
+                        target="_blank" 
+                        style="color: #5B5FEF; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-external-link-alt"></i>
+                            Open in Google Drive
+                        </a>
+                    </div>
                 </div>
                 <div style="background: #f8fafc; padding: 30px; border-radius: 15px;">
                     <h3>Demo Highlights</h3>

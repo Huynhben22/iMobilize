@@ -682,3 +682,75 @@ section:last-of-type {
 .mt-4 {
     margin-top: 2rem;
 }
+
+/* Demo Section Video Styles */
+.demo-video-container {
+    background: #f8fafc;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    position: relative;
+    width: 100%;
+}
+
+.demo-video {
+    width: 100%;
+    height: auto;
+    min-height: 400px;
+    max-height: 70vh;
+    object-fit: contain;
+    display: block;
+    background: #000;
+}
+
+/* Fullscreen video styles */
+.demo-video:fullscreen {
+    width: 100vw;
+    height: 100vh;
+    object-fit: contain;
+    background: #000;
+}
+
+.demo-video:-webkit-full-screen {
+    width: 100vw;
+    height: 100vh;
+    object-fit: contain;
+    background: #000;
+}
+
+.demo-video:-moz-full-screen {
+    width: 100vw;
+    height: 100vh;
+    object-fit: contain;
+    background: #000;
+}
+
+.demo-video:-ms-fullscreen {
+    width: 100vw;
+    height: 100vh;
+    object-fit: contain;
+    background: #000;
+}
+
+@media (max-width: 768px) {
+    .demo-video {
+        min-height: 250px;
+        max-height: 50vh;
+    }
+    
+    /* Stack demo section vertically on mobile */
+    .demo-section .container > div {
+        display: block !important;
+    }
+    
+    .demo-video-container {
+        margin-bottom: 30px;
+    }
+}
+
+@media (max-width: 480px) {
+    .demo-video {
+        min-height: 200px;
+        max-height: 40vh;
+    }
+}

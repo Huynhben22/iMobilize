@@ -1,3 +1,4 @@
+// src/navigation/AppNavigator.js - FIXED VERSION
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -36,7 +37,7 @@ const AppNavigator = () => {
     <NavigationContainer>
       <Stack.Navigator 
         screenOptions={{ headerShown: false }}
-        initialRouteName={isAuthenticated ? "Main" : "Main"}
+        initialRouteName={isAuthenticated ? "Main" : "Welcome"}
       >
         {isAuthenticated ? (
           // User is authenticated - show main app
@@ -44,7 +45,8 @@ const AppNavigator = () => {
         ) : (
           // User is not authenticated - show auth flow
           <>
-            <Stack.Screen name="Main" component={MainNavigator} />
+            <Stack.Screen name="Welcome" component={WelcomeScreen} />
+            <Stack.Screen name="Auth" component={AuthScreen} />
           </>
         )}
       </Stack.Navigator>

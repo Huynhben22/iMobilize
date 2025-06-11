@@ -1,4 +1,4 @@
-// App.js - Fixed to use MainNavigator
+// App.js - FIXED VERSION with proper authentication
 import React from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -40,7 +40,7 @@ const AppNavigator = () => {
     <NavigationContainer>
       <Stack.Navigator 
         screenOptions={{ headerShown: false }}
-        initialRouteName={isAuthenticated ? "Main" : "Main"}
+        initialRouteName={isAuthenticated ? "Main" : "Welcome"}
       >
         {isAuthenticated ? (
           // User is authenticated - show main app with tabs
@@ -48,7 +48,8 @@ const AppNavigator = () => {
         ) : (
           // User is not authenticated - show auth flow
           <>
-            <Stack.Screen name="Main" component={MainNavigator} />
+            <Stack.Screen name="Welcome" component={WelcomeScreen} />
+            <Stack.Screen name="Auth" component={AuthScreen} />
           </>
         )}
       </Stack.Navigator>

@@ -109,7 +109,7 @@ NODE_ENV=development
 PG_HOST=localhost
 PG_PORT=5432
 PG_USER=postgres
-PG_PASSWORD=yourpassword
+PG_PASSWORD="Ilikebobcat944#postgres"
 PG_DATABASE=imobilize
 PG_MAX_CONNECTIONS=20
 
@@ -152,8 +152,6 @@ API_BASE_URL=http://localhost:3000/api
 API_TIMEOUT=10000
 DEBUG_MODE=true
 ```
-
-### 4. Verify Backend Setup
 
 **Start the API server:**
 ```bash

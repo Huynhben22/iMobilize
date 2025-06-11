@@ -109,7 +109,7 @@ NODE_ENV=development
 PG_HOST=localhost
 PG_PORT=5432
 PG_USER=postgres
-PG_PASSWORD="Ilikebobcat944#postgres"
+PG_PASSWORD=yourpassword
 PG_DATABASE=imobilize
 PG_MAX_CONNECTIONS=20
 

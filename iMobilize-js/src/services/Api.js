@@ -379,6 +379,13 @@ class ApiService {
     return this.request(endpoint);
   }
 
+  async getJurisdictionData(state){
+    const queryParams = new URLSearchParams();
+    queryParams.append([0, state]);
+    const endpoint = `/legal/data/jurisdiction${queryParams.toString() ? `?${queryParams}` : ''}`;
+    return this.request(endpoint);
+  }
+
   // ===========================================
   // UTILITY METHODS
   // ===========================================

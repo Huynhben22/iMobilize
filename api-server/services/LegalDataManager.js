@@ -490,6 +490,12 @@ class LegalDataManager {
         params.push(`%${penalty}%`);
         paramCount++;
       }
+
+      if (jurisdiction) {
+        query += ` AND jurisdiction ILIKE $${paramCount}`;
+        params.push(`%${jurisdiction}%`);
+        paramCount++;
+      }
       
       query += ` ORDER BY relevance DESC, cite LIMIT $${paramCount} OFFSET $${paramCount + 1}`;
       params.push(limit, offset);

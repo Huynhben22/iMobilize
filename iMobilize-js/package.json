@@ -26,17 +26,14 @@
     "react-leaflet": "^5.0.0-rc.2",
     "react-native": "^0.79.2",
     "react-native-app": "^1.0.0",
-    "react-native-gesture-handler": "^2.24.0",
-    "react-native-safe-area-context": "^5.4.0",
-    "react-native-screens": "^4.10.0",
+    "react-native-gesture-handler": "~2.24.0",
+    "react-native-safe-area-context": "5.4.0",
+    "react-native-screens": "~4.11.1",
     "react-native-web": "^0.20.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
     "@types/leaflet": "^1.9.18"
   },
-  "private": true,
-  "author": "",
-  "license": "ISC",
-  "description": ""
+  "private": true
 }

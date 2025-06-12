@@ -98,28 +98,59 @@ cp .env.example .env
 ```
 
 **Edit `.env` file with your database credentials:**
+*Copy this whole bit into a .env file and update the PG password*
+
 ```env
-# Server
+# Server Configuration
 PORT=3000
 NODE_ENV=development
 
-# PostgreSQL
+# PostgreSQL Configuration
 PG_HOST=localhost
-PG_USER=imobilize_user
-PG_PASSWORD=your_password
-PG_DATABASE=imobilize
 PG_PORT=5432
+PG_USER=postgres
+PG_PASSWORD=yourpassword
+PG_DATABASE=imobilize
+PG_MAX_CONNECTIONS=20
 
-# MongoDB
+# MongoDB Configuration  
 MONGO_URI=mongodb://localhost:27017
 MONGO_DB_NAME=imobilize
 
-# Security
-JWT_SECRET=your-super-secure-32-character-secret-key-here
+# JWT Configuration
+JWT_SECRET=your-super-secure-jwt-secret-key-at-least-32-characters-long
 JWT_EXPIRES_IN=24h
 
-# CORS (for mobile/web apps)
-CORS_ORIGIN=http://localhost:19006,http://localhost:19000,http://localhost:3001
+# Rate Limiting
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
+AUTH_RATE_LIMIT_MAX=5
+
+# File Upload Configuration
+MAX_FILE_SIZE=10485760
+UPLOAD_PATH=./uploads
+
+# Email Configuration (for future features)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+
+# Security Configuration
+BCRYPT_ROUNDS=12
+SESSION_SECRET=another-super-secure-secret-for-sessions
+
+# CORS Configuration
+CORS_ORIGIN=http://localhost:19006,http://localhost:3001
+CORS_CREDENTIALS=true
+
+# Logging Configuration
+LOG_LEVEL=info
+LOG_FILE=logs/app.log
+
+API_BASE_URL=http://localhost:3000/api
+API_TIMEOUT=10000
+DEBUG_MODE=true
 ```
 
 **Start the API server:**
@@ -129,8 +160,7 @@ npm start
 npm run dev
 ```
 
-### 4. Verify Backend Setup
-
+**Test API Server Conncections**
 ```bash
 # Test server health
 curl http://localhost:3000/health

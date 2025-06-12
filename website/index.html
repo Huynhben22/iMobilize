@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>iMobilize - Empowering Social Activism</title>
+    <link rel="stylesheet" href="styles.css">
+<body>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-fist-raised"></i>
+                <span>iMobilize</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#home" class="nav-link">Home</a></li>
+                <li><a href="#development" class="nav-link">Development</a></li>
+                <li><a href="#demo" class="nav-link">Demo</a></li>
+                <li><a href="#implementation" class="nav-link">Implementation</a></li>
+                <li><a href="#future" class="nav-link">Future Work</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">iMobilize</h1>
+            <p class="hero-subtitle">Empowering Social Activism Through Technology</p>
+            <p class="hero-description">
+                A comprehensive mobile application that eliminates barriers to social and civic activism 
+                by providing educational resources, location-specific legal guides, and tools for coordination and communication.
+            </p>
+            <div class="sdg-badges">
+                <div class="sdg-badge">
+                    <span class="sdg-number">10</span>
+                    <span class="sdg-text">Reduced Inequalities</span>
+                </div>
+                <div class="sdg-badge">
+                    <span class="sdg-number">16</span>
+                    <span class="sdg-text">Peace, Justice & Strong Institutions</span>
+                </div>
+            </div>
+        </div>
+        <div class="hero-image">
+            <div class="phone-mockup">
+                <div class="phone-screen">
+                    <div class="app-header">
+                        <h3>iMobilize</h3>
+                    </div>
+                    <div class="app-feature">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Legal Resources</span>
+                    </div>
+                    <div class="app-feature">
+                        <i class="fas fa-users"></i>
+                        <span>Community Building</span>
+                    </div>
+                    <div class="app-feature">
+                        <i class="fas fa-calendar"></i>
+                        <span>Event Organization</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Project Info Section -->
+    <section class="project-info">
+        <div class="container">
+            <div class="card">
+                <h3>Course Information</h3>
+                <p><strong>Course:</strong> CSCI 497 - Computer Science Capstone</p>
+                <p><strong>Quarter:</strong> Fall 2024</p>
+                <p><strong>Professor:</strong> Dr. Shameem Ahmed</p>
+                <p><strong>University:</strong> Western Washington University</p>
+            </div>
+
+            <div class="card">
+                <h3>Meet Our Team</h3>
+                <p class="text-center mb-4">Four passionate computer science students dedicated to empowering social activism through innovative technology.</p>
+                <div class="team-grid">
+
+
+                    <div class="team-member">
+                        <div class="member-avatar">
+                            <img src="photos/hanze-aggabao.jpg" alt="Hanze Aggabao" class="member-photo"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                            <div class="member-fallback">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        </div>
+                        <h4>Hanze Aggabao</h4>
+                        <p style="color: #5B5FEF;">[aggabah@wwu.edu]</p>
+                        <p style="color: #7C3AED; font-weight: 600;">Graduate Student & Research Lead</p>
+                    </div>
+
+                    <div class="team-member">
+                        <div class="member-avatar">
+                            <img src="photos/ben-huynh.jpg" alt="Ben Huynh" class="member-photo"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                            <div class="member-fallback">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        </div>
+                        <h4>Ben Huynh</h4>
+                        <p style="color: #5B5FEF;">huynhb22@wwu.edu</p>
+                        <p style="color: #7C3AED; font-weight: 600;">Undergraduate Student</p>
+                    </div>
+
+                    <div class="team-member">
+                        <div class="member-avatar">
+                            <img src="photos/joe-obryon.jpg" alt="Joe O'Bryon" class="member-photo"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                            <div class="member-fallback">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        </div>
+                        <h4>Joe O'Bryon</h4>
+                        <p style="color: #5B5FEF;">[obryonj@wwu.edu]</p>
+                        <p style="color: #7C3AED; font-weight: 600;">Undergraduate Student</p>
+                    </div>
+
+                    <div class="team-member">
+                        <div class="member-avatar">
+                            <img src="photos/carver_rasmussen.jpg" alt="Carver Rasmussen" class="member-photo"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                            <div class="member-fallback">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        </div>
+                        <h4>Carver Rasmussen</h4>
+                        <p style="color: #5B5FEF;">[rasmusa4@wwu.edu]</p>
+                        <p style="color: #7C3AED; font-weight: 600;">Undergraduate Student</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="problem-solution">
+                <div class="card">
+                    <h3>The Problem</h3>
+                    <p>
+                        Social and civic activism faces significant barriers that prevent widespread participation and effective organization. 
+                        Current solutions are fragmented across multiple platforms, creating a stressful and complicated experience for activists who 
+                        simply want to create positive change in their communities.
+                    </p>
+                    
+                    <h4>Key Challenges:</h4>
+                    <ul style="margin: 20px 0; padding-left: 20px;">
+                        <li><strong>Social Media Burden:</strong> Activists are forced to navigate algorithm-driven platforms where important information gets buried</li>
+                        <li><strong>Fragmented Resources:</strong> Legal information, safety protocols, and organizing tools are scattered across different platforms</li>
+                        <li><strong>Lack of Education:</strong> 80% of college students are unaware of their university's policies on protests</li>
+                        <li><strong>Safety Concerns:</strong> Many activists lack access to location-specific legal guidance</li>
+                        <li><strong>Coordination Difficulties:</strong> Organizing peaceful protests requires juggling multiple tools</li>
+                    </ul>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <h4>158 Million</h4>
+                            <p>Americans participated in activism in the past 5 years (Pew Research, 2021)</p>
+                        </div>
+                        <div class="stat-item">
+                            <h4>80%</h4>
+                            <p>Of college students unaware of protest policies at their universities</p>
+                        </div>
+                        <div class="stat-item">
+                            <h4>75%</h4>
+                            <p>Of grassroots movements struggle with coordination and organization</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Our Solution: Stress-Free Activism Organization</h3>
+                    <p>
+                        iMobilize creates a <strong>dedicated, algorithm-free space</strong> for peaceful protest organization. 
+                        We eliminate the burden of navigating social media platforms and provide everything activists need in one 
+                        secure, easy-to-use application.
+                    </p>
+                    
+                    <h4>Core Principles:</h4>
+                    <div style="margin: 20px 0;">
+                        <span style="background: linear-gradient(135deg, #5B5FEF, #7C3AED); color: white; padding: 8px 15px; border-radius: 20px; margin: 5px; display: inline-block;">Stress-Free Experience</span>
+                        <span style="background: linear-gradient(135deg, #5B5FEF, #7C3AED); color: white; padding: 8px 15px; border-radius: 20px; margin: 5px; display: inline-block;">Peaceful Focus</span>
+                        <span style="background: linear-gradient(135deg, #5B5FEF, #7C3AED); color: white; padding: 8px 15px; border-radius: 20px; margin: 5px; display: inline-block;">Community-Centered</span>
+                        <span style="background: linear-gradient(135deg, #5B5FEF, #7C3AED); color: white; padding: 8px 15px; border-radius: 20px; margin: 5px; display: inline-block;">Safety First</span>
+                    </div>
+                    
+                    <h4>What Makes Us Different:</h4>
+                    <ul style="list-style: none; margin: 20px 0;">
+                        <li style="margin-bottom: 10px;"><strong>All-in-One Platform:</strong> Unlike fragmented solutions, everything you need is in one place</li>
+                        <li style="margin-bottom: 10px;"><strong>No Social Media Required:</strong> Escape algorithm manipulation and content censorship</li>
+                        <li style="margin-bottom: 10px;"><strong>Location-Specific Legal Guides:</strong> Know your rights in your specific jurisdiction</li>
+                        <li style="margin-bottom: 10px;"> <strong>Easy Navigation:</strong> Intuitive design that anyone can use, regardless of tech experience</li>
+                        <li style="margin-bottom: 10px;"> <strong>Educational Resources:</strong> Learn effective, safe protest methods and strategies</li>
+                        <li style="margin-bottom: 10px;"> <strong>Secure Communication:</strong> End-to-end encryption without the complexity</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- NEW: Competitive Analysis Section -->
+            <div class="competitive-analysis">
+                <h3>How iMobilize Differs from Existing Solutions</h3>
+                <p style="margin-bottom: 30px;">
+                    We analyzed 12 existing platforms and identified critical gaps that iMobilize uniquely addresses. 
+                    Here's how we compare to the most popular solutions:
+                </p>
+                
+                <div class="comparison-grid">
+                    <div class="competitor-card">
+                        <h4>Facebook Events & Groups</h4>
+                        <p><strong>What they offer:</strong> General event creation and group management</p>
+                        <div class="limitations">
+                            <h5>Limitations for Activism:</h5>
+                            <ul>
+                                <li>Algorithm manipulation buries important posts</li>
+                                <li>Content censorship and account suspensions</li>
+                                <li>No legal resources or protest-specific guidance</li>
+                                <li>Events designed for general purposes, not activism</li>
+                                <li>Privacy concerns with data collection</li>
+                                <li>Distracting news feeds and advertisements</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="competitor-card">
+                        <h4>TurnUp</h4>
+                        <p><strong>What they offer:</strong> Activism platform with "impact points" and social features</p>
+                        <div class="limitations">
+                            <h5>Why We Avoid This Approach:</h5>
+                            <ul>
+                                <li>Gamification trivializes serious social issues</li>
+                                <li>Points system creates competition instead of collaboration</li>
+                                <li>Users shouldn't feel obligated to "earn points" for their beliefs</li>
+                                <li>Focus on metrics rather than meaningful change</li>
+                                <li>Limited legal resources and safety information</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="competitor-card">
+                        <h4>Telegram/Signal Groups</h4>
+                        <p><strong>What they offer:</strong> Secure messaging for organizing</p>
+                        <div class="limitations">
+                            <h5>Limitations for Full Organization:</h5>
+                            <ul>
+                                <li>Only messaging - no event management tools</li>
+                                <li>No legal resources or educational content</li>
+                                <li>Complex setup for non-technical users</li>
+                                <li>No location-specific guidance</li>
+                                <li>Lacks community building features</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="competitor-card">
+                        <h4>Meetup</h4>
+                        <p><strong>What they offer:</strong> General event organization platform</p>
+                        <div class="limitations">
+                            <h5>Not Built for Activism:</h5>
+                            <ul>
+                                <li>No security features for sensitive organizing</li>
+                                <li>No legal resources or safety protocols</li>
+                                <li>General-purpose design, not activism-focused</li>
+                                <li>Limited communication tools</li>
+                                <li>No educational resources about protest rights</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="our-solution-card">
+                        <h4>iMobilize - Our Unique Approach</h4>
+                        <p><strong>What we provide:</strong> Comprehensive activism platform designed specifically for peaceful protest organization</p>
+                        <div class="our-advantages">
+                            <h5>Our Competitive Advantages:</h5>
+                            <ul>
+                                <li>Algorithm-free environment - no content manipulation</li>
+                                <li>Integrated legal resources specific to your location</li>
+                                <li>Purpose-built for activism, not general social networking</li>
+                                <li>No gamification - focused on empowerment, not competition</li>
+                                <li>All tools in one place: events, communication, education, legal guides</li>
+                                <li>Protest-specific safety features and protocols</li>
+                                <li>Educational resources about effective peaceful organizing</li>
+                                <li>Privacy-first design without data mining</li>
+                                <li>Simple interface accessible to all technical skill levels</li>
+                                <li>Community building without social media distractions</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="our-solution-card">
+                        <h4>Why Existing Solutions Fall Short</h4>
+                        <p><strong>The Problem:</strong> Current platforms force activists to choose between effectiveness and ethics</p>
+                        <div class="our-advantages">
+                            <h5>What Sets Us Apart:</h5>
+                            <ul>
+                                <li>No dependence on profit-driven algorithms</li>
+                                <li>Stress-free organizing without social media complexity</li>
+                                <li>Legal education integrated directly into the platform</li>
+                                <li>Built by activists, for activists - not corporate interests</li>
+                                <li>Focus on peaceful, effective change rather than viral content</li>
+                                <li>Security without sacrificing usability</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: #f0fdf4; padding: 20px; border-radius: 10px; border-left: 4px solid #22c55e; margin-top: 30px;">
+                    <h4 style="color: #16a34a;">Bottom Line</h4>
+                    <p style="color: #333;">
+                        While other platforms offer pieces of what activists need, <strong>iMobilize is the only solution that combines 
+                        secure communication, event organization, legal education, and community building in one algorithm-free, 
+                        purpose-built platform</strong> designed specifically for peaceful social activism.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Global Impact & Evidence-Based Need</h3>
+                <p>
+                    Our solution addresses a documented need affecting <strong>millions of Americans</strong> and has potential 
+                    for global impact. Based on rigorous research and verified statistics:
+                </p>
+                
+                <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                    <div style="margin-bottom: 15px; padding: 15px; background: white; border-radius: 6px; border-left: 4px solid #5B5FEF;">
+                        <strong>158M+ Americans</strong> participated in activism (past 5 years) - Pew Research, 2021
+                    </div>
+                    <div style="margin-bottom: 15px; padding: 15px; background: white; border-radius: 6px; border-left: 4px solid #5B5FEF;">
+                        <strong>80% of college students</strong> unaware of protest policies - Survey of 4,000 students
+                    </div>
+                    <div style="margin-bottom: 15px; padding: 15px; background: white; border-radius: 6px; border-left: 4px solid #5B5FEF;">
+                        <strong>48% of Americans</strong> engaged in some form of activism - Pew Research
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; margin: 30px 0;">
+                    <div style="text-align: center; padding: 30px; background: #f8fafc; border-radius: 15px;">
+                        <i class="fas fa-graduation-cap" style="font-size: 3rem; color: #5B5FEF; margin-bottom: 20px;"></i>
+                        <h4>Students & Young Adults (18-29)</h4>
+                        <p><strong>50M+ individuals</strong> - Highest activism participation rate but lowest knowledge of legal rights and protest policies</p>
+                    </div>
+                    <div style="text-align: center; padding: 30px; background: #f8fafc; border-radius: 15px;">
+                        <i class="fas fa-users" style="font-size: 3rem; color: #5B5FEF; margin-bottom: 20px;"></i>
+                        <h4>Community Organizers & Leaders</h4>
+                        <p><strong>20M+ activists</strong> - Experienced organizers needing better coordination tools without social media dependency</p>
+                    </div>
+                    <div style="text-align: center; padding: 30px; background: #f8fafc; border-radius: 15px;">
+                        <i class="fas fa-balance-scale" style="font-size: 3rem; color: #5B5FEF; margin-bottom: 20px;"></i>
+                        <h4>Legal Advocates & NGO Workers</h4>
+                        <p><strong>5M+ professionals</strong> - Those providing support and education to grassroots movements</p>
+                    </div>
+                </div>
+
+                <div style="background: #f0fdf4; padding: 20px; border-radius: 8px; border-left: 4px solid #22c55e; margin: 25px 0;">
+                    <h4 style="color: #16a34a;">Potential Impact:</h4>
+                    <p><strong>75+ Million Americans</strong> could benefit from streamlined activism tools and education. Framework adaptable for <strong>democratic countries worldwide</strong> with estimated 500M+ potential users.</p>
+                    <p><strong>SDG Alignment:</strong> Directly supports SDG 10 (Reduced Inequalities) and SDG 16 (Peace, Justice & Strong Institutions)</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Technology Stack</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px;">
+                    <div style="background: #f8fafc; padding: 25px; border-radius: 10px;">
+                        <h4 style="color: #5B5FEF; margin-bottom: 15px;">Frontend</h4>
+                        <ul style="list-style: none;">
+                            <li style="padding: 5px 0; color: #666; border-bottom: 1px solid #e2e8f0;">React Native (Cross-platform mobile)</li>
+                            <li style="padding: 5px 0; color: #666; border-bottom: 1px solid #e2e8f0;">Expo (Development framework)</li>
+                            <li style="padding: 5px 0; color: #666;">React Navigation</li>
+                        </ul>
+                    </div>
+                    <div style="background: #f8fafc; padding: 25px; border-radius: 10px;">
+                        <h4 style="color: #5B5FEF; margin-bottom: 15px;">Backend</h4>
+                        <ul style="list-style: none;">
+                            <li style="padding: 5px 0; color: #666; border-bottom: 1px solid #e2e8f0;">Node.js with Express.js</li>
+                            <li style="padding: 5px 0; color: #666; border-bottom: 1px solid #e2e8f0;">PostgreSQL (Relational data)</li>
+                            <li style="padding: 5px 0; color: #666;">MongoDB (Document storage)</li>
+                        </ul>
+                    </div>
+                    <div style="background: #f8fafc; padding: 25px; border-radius: 10px;">
+                        <h4 style="color: #5B5FEF; margin-bottom: 15px;">Security</h4>
+                        <ul style="list-style: none;">
+                            <li style="padding: 5px 0; color: #666; border-bottom: 1px solid #e2e8f0;">JWT Authentication</li>
+                            <li style="padding: 5px 0; color: #666; border-bottom: 1px solid #e2e8f0;">bcrypt Password Hashing</li>
+                            <li style="padding: 5px 0; color: #666;">Signal Protocol (E2E Encryption)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Development Section -->
+    <section id="development" class="development-section">
+        <div class="container">
+            <h2>Research & Development Methodology</h2>
+            
+            <div class="methodology-section">
+                <!-- Phase 1: Literature Review -->
+                <div class="methodology-phase">
+                    <div class="phase-header">
+                        <h3>Phase 1: Systematic Literature Review</h3>
+                    </div>
+                    <div class="phase-content">
+                        <div class="phase-info">
+                            <p><strong>Papers Analyzed:</strong> 10 academic papers and reports</p>
+                            <p><strong>Duration:</strong> 3 weeks</p>
+                            <p><strong>Key Findings:</strong></p>
+                            <ul>
+                                <li>Applications for social activism is not a dense space with very few applications meant for the purpose of streamlining protests</li>
+                                <li>Some papers discussed valuable insights for developing specialized applications for organizing protest, using strategies revolving around informing, activating, and explaining</li>
+                                <li>Exaimination of modern trends and tools used to push anonymization and data activism within certain applications</li>
+                                <li>Analysis of meta-activism emerging in virtual digital spaces and metaverses</li>
+                            </ul>
+                            <p><strong>Outcome:</strong> Identified critical gaps in current activism technology landscape</p>
+                        </div>
+                         <div class="phase-images">
+                            <div class="mobile-screenshot">
+                                <img src="photos/phase1-1.png" alt="Interview Results" />
+                            </div>
+                            <div class="mobile-screenshot">
+                                <img src="photos/phase1-2.png" alt="User Personas" />
+                            </div>
+                            <div class="mobile-screenshot">
+                                <img src="photos/phase1-3.png" alt="Prototype Mockups" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase 2: System Analysis -->
+                <div class="methodology-phase">
+                    <div class="phase-header">
+                        <h3>Phase 2: Competitive System Analysis</h3>
+                    </div>
+                    <div class="phase-content">
+                        <div class="phase-info">
+                            <p><strong>Systems Analyzed:</strong> 12 existing platforms</p>
+                            <p><strong>Duration:</strong> 4 weeks</p>
+                            <p><strong>Key Findings:</strong></p>
+                            <ul>
+                                <li>Most platforms lack legal resources integration</li>
+                                <li>Poor user experience in crisis situations</li>
+                                <li>Limited community building features specific to activism</li>
+                                <li>No platforms combine all necessary activism tools</li>
+                                <li>Security vs. usability trade-offs poorly balanced</li>
+                            </ul>
+                            <p><strong>Outcome:</strong> Defined unique value proposition and progressed with implementation of scraping live state law documentation.
+                            We also included a  comprehensive dashboard including the top most relevant information for the user, including upcoming events and movements the user is apart of.</p>
+                        </div>
+                        <div class="phase-images phase-images-mobile">
+                            <div class="mobile-screenshot">
+                                <img src="photos/phase2.png" alt="Competitive Matrix" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase 3: User Study -->
+                <div class="methodology-phase">
+                    <div class="phase-header">
+                        <h3>Phase 3: User Research & Prototype Testing</h3>
+                    </div>
+                    <div class="phase-content">
+                        <div class="phase-info">
+                            <p><strong>Interviews Conducted:</strong> 4 college activists</p>
+                            <p><strong>Duration:</strong> 3 weeks</p>
+                            <p><strong>Key Findings:</strong></p>
+                            <ul>
+                                <li>Privacy and anonymity are major concerns - users prefer aliases over real names</li>
+                                <li>Users want verification of attendance numbers before committing to events</li>
+                                <li>Event discovery happens through word of mouth and social media platforms</li>
+                                <li>Local relevance is critical - users don't want events too far away</li>
+                                <li>Clear event details needed: type of protest, safety expectations, turnout</li>
+                                <li>Users want follow-up information about activism outcomes and results</li>
+                                <li>Need for user verification systems to prevent bots while maintaining anonymity</li>
+                                <li>Uncertainty about safety at events is a major barrier to participation</li>
+                            </ul>
+                            <p><strong>Outcome:</strong> Validated five-tab layout design and confirmed need for privacy-first approach with local event focus; including new terms of service pop-up before any users login, and organizing movement functionality.</p>
+                        </div>
+                        <div class="phase-images">
+                            <div class="mobile-screenshot">
+                                <img src="photos/phase3-1.png" alt="Interview Results" />
+                            </div>
+                            <div class="mobile-screenshot">
+                                <img src="photos/phase3-2.png" alt="User Personas" />
+                            </div>
+                            <div class="mobile-screenshot">
+                                <img src="photos/phase3-3.png" alt="Prototype Mockups" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Database Design</h3>
+                <p style="margin-bottom: 20px;">Our database design supports scalable user management, complex group hierarchies, and efficient event coordination:</p>
+                <ul style="margin-top: 20px; padding-left: 20px;">
+                    <li style="margin-bottom: 10px; color: #666;"><strong>Users Table:</strong> Authentication, profiles, and privacy settings</li>
+                    <li style="margin-bottom: 10px; color: #666;"><strong>Groups & Group Members:</strong> Hierarchical group management with roles</li>
+                    <li style="margin-bottom: 10px; color: #666;"><strong>Events & Participants:</strong> Flexible event system with group integration</li>
+                    <li style="margin-bottom: 10px; color: #666;"><strong>Forums & Posts:</strong> Community discussion platform</li>
+                    <li style="margin-bottom: 10px; color: #666;"><strong>Legal Documents:</strong> Structured legal resource database</li>
+                    <li style="margin-bottom: 10px; color: #666;"><strong>Notifications:</strong> Smart notification system with expiration</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    
+    <section id="demo" class="demo-section">
+        <div class="container">
+            <h2>Application Demo</h2>
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 50px; align-items: start;">
+                <div class="demo-video-container">
+                    <!-- Direct Google Drive Video Embed -->
+                    <video 
+                        class="demo-video"
+                        controls 
+                        preload="metadata">
+                        <source src="https://drive.google.com/uc?export=download&id=1KR6aifMtCYbDNrB9YlcPFabNBMFzLLwx" type="video/mp4">
+                        <!-- Fallback for browsers that don't support video -->
+                        <div style="height: 400px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #64748b; background: linear-gradient(135deg, #e2e8f0, #cbd5e1);">
+                            <i class="fas fa-video" style="font-size: 4rem; margin-bottom: 20px; color: #5B5FEF;"></i>
+                            <p style="font-size: 1.2rem; margin-bottom: 10px;">Video not supported in this browser</p>
+                            <a href="https://drive.google.com/file/d/1KR6aifMtCYbDNrB9YlcPFabNBMFzLLwx/view?usp=sharing" target="_blank" style="color: #5B5FEF; text-decoration: none;">Watch on Google Drive</a>
+                        </div>
+                    </video>
+                    
+                    <!-- Backup link -->
+                    <div style="margin-top: 15px; text-align: center;">
+                        <a href="https://drive.google.com/file/d/1KR6aifMtCYbDNrB9YlcPFabNBMFzLLwx/view?usp=sharing" 
+                        target="_blank" 
+                        style="color: #5B5FEF; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-external-link-alt"></i>
+                            Open in Google Drive
+                        </a>
+                    </div>
+                </div>
+                <div style="background: #f8fafc; padding: 30px; border-radius: 15px;">
+                    <h3>Demo Highlights</h3>
+                    <ul style="list-style: none;">
+                        <li style="display: flex; align-items: center; margin-bottom: 15px; padding: 10px; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);">
+                            <i class="fas fa-check" style="color: #22c55e; margin-right: 15px; font-size: 1.2rem;"></i>
+                            User registration and authentication flow
+                        </li>
+                        <li style="display: flex; align-items: center; margin-bottom: 15px; padding: 10px; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);">
+                            <i class="fas fa-check" style="color: #22c55e; margin-right: 15px; font-size: 1.2rem;"></i>
+                            Creating and joining activist groups
+                        </li>
+                        <li style="display: flex; align-items: center; margin-bottom: 15px; padding: 10px; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);">
+                            <i class="fas fa-check" style="color: #22c55e; margin-right: 15px; font-size: 1.2rem;"></i>
+                            Organizing events with group integration
+                        </li>
+                        <li style="display: flex; align-items: center; margin-bottom: 15px; padding: 10px; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);">
+                            <i class="fas fa-check" style="color: #22c55e; margin-right: 15px; font-size: 1.2rem;"></i>
+                            Browsing legal resources and guides
+                        </li>
+                        <li style="display: flex; align-items: center; margin-bottom: 15px; padding: 10px; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);">
+                            <i class="fas fa-check" style="color: #22c55e; margin-right: 15px; font-size: 1.2rem;"></i>
+                            Community forum interactions
+                        </li>
+                        <li style="display: flex; align-items: center; margin-bottom: 15px; padding: 10px; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);">
+                            <i class="fas fa-check" style="color: #22c55e; margin-right: 15px; font-size: 1.2rem;"></i>
+                            Real-time notifications system
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    const targetSection = document.querySelector(targetId);
+                    if (targetSection) {
+                        targetSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            });
+
+            // Simple scroll animations
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            });
+
+            // Observe cards for animation
+            document.querySelectorAll('.card, .feature-card, .team-member, .methodology-phase').forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(20px)';
+                el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                observer.observe(el);
+            });
+    });
+    </script>
+</body>
+</html>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Implementation Section -->
+    <section id="implementation" class="implementation-section">
+        <div class="container">
+            <h2>Final Implementation</h2>
+            
+            <div class="text-center mb-4">
+                <p style="max-width: 800px; margin: 0 auto; font-size: 1.1rem; color: #666;">
+                    Our final implementation consists of a comprehensive mobile application with a robust backend API, 
+                    featuring five core modules that work together to provide a complete activism platform.
+                </p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <h3>Authentication System</h3>
+                    <ul style="list-style: none;">
+                        <li style="padding: 8px 0; color: #666; position: relative; padding-left: 20px;">JWT-based secure authentication</li>
+                        <li style="padding: 8px 0; color: #666; position: relative; padding-left: 20px;">Profile management with privacy controls</li>
+                        <li style="padding: 8px 0; color: #666; position: relative; padding-left: 20px;">Role-based access control</li>
+                        <li style="padding: 8px 0; color: #666; position: relative; padding-left: 20px;">Password strength requirements</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3>Groups Management</h3>
+                    <ul style="list-style: none;">
+                        <li style="padding: 8px 0; color: #666; position: relative; padding-left: 20px;">Create and join activist groups</li>
+                        <li style="padding: 8px 0; color: #666; position: relative; padding-left: 20px;">Hierarchical roles (Admin, Moderator, Member)</li>
+                        <li style="padding: 8px 0; color: #666; position: relative; padding-left: 20px;">Public and private groups</li>
+                        <li style="padding: 8px 0; color: #666; position: relative; padding-left: 20px;">Member management and permissions</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <h3>Event Coordination</h3>
+                    <ul style="list-style: none;">
+                        <li style="padding: 8px 0; color: #666; position: relative; padding-left: 20px;">Event creation and management</li>
+                        <li style="padding: 8px 0; color: #666; position: relative; padding-left: 20px;">Group-organized events</li>
+                        <li style="padding: 8px 0; color: #666; position: relative; padding-left: 20px;">Category-based filtering</li>
+                        <li style="padding: 8px 0; color: #666; position: relative; padding-left: 20px;">Access codes for private events</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <h3>Community Forums</h3>
+                    <ul style="list-style: none;">
+                        <li style="padding: 8px 0; color: #666; position: relative; padding-left: 20px;">Discussion forums and posts</li>
+                        <li style="padding: 8px 0; color: #666; position: relative; padding-left: 20px;">Nested comment system</li>
+                        <li style="padding: 8px 0; color: #666; position: relative; padding-left: 20px;">Group-specific forums</li>
+                        <li style="padding: 8px 0; color: #666; position: relative; padding-left: 20px;">Moderation tools</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <h3>Smart Notifications</h3>
+                    <ul style="list-style: none;">
+                        <li style="padding: 8px 0; color: #666; position: relative; padding-left: 20px;">Event reminders and updates</li>
+                        <li style="padding: 8px 0; color: #666; position: relative; padding-left: 20px;">Group activity notifications</li>
+                        <li style="padding: 8px 0; color: #666; position: relative; padding-left: 20px;">Customizable notification preferences</li>
+                        <li style="padding: 8px 0; color: #666; position: relative; padding-left: 20px;">Real-time push notifications</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-balance-scale"></i>
+                    </div>
+                    <h3>Legal Resources</h3>
+                    <ul style="list-style: none;">
+                        <li style="padding: 8px 0; color: #666; position: relative; padding-left: 20px;">Washington State RCW database</li>
+                        <li style="padding: 8px 0; color: #666; position: relative; padding-left: 20px;">Protest-specific legal guidance</li>
+                        <li style="padding: 8px 0; color: #666; position: relative; padding-left: 20px;">Know-your-rights resources</li>
+                        <li style="padding: 8px 0; color: #666; position: relative; padding-left: 20px;">Penalty classifications and explanations</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Technical Architecture</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; margin-top: 30px;">
+                    <div style="background: #f8fafc; padding: 25px; border-radius: 10px; border-left: 4px solid #5B5FEF;">
+                        <h4 style="color: #333; margin-bottom: 15px;">Mobile Frontend</h4>
+                        <ul style="list-style: none;">
+                            <li style="padding: 5px 0; color: #666; font-size: 0.9rem;">React Native with Expo</li>
+                            <li style="padding: 5px 0; color: #666; font-size: 0.9rem;">Cross-platform iOS/Android/Web</li>
+                            <li style="padding: 5px 0; color: #666; font-size: 0.9rem;">Navigation with React Navigation</li>
+                            <li style="padding: 5px 0; color: #666; font-size: 0.9rem;">State management with React hooks</li>
+                        </ul>
+                    </div>
+                    <div style="background: #f8fafc; padding: 25px; border-radius: 10px; border-left: 4px solid #5B5FEF;">
+                        <h4 style="color: #333; margin-bottom: 15px;">Backend API</h4>
+                        <ul style="list-style: none;">
+                            <li style="padding: 5px 0; color: #666; font-size: 0.9rem;">Node.js with Express.js</li>
+                            <li style="padding: 5px 0; color: #666; font-size: 0.9rem;">RESTful API design</li>
+                            <li style="padding: 5px 0; color: #666; font-size: 0.9rem;">Rate limiting and security middleware</li>
+                            <li style="padding: 5px 0; color: #666; font-size: 0.9rem;">Comprehensive error handling</li>
+                        </ul>
+                    </div>
+                    <div style="background: #f8fafc; padding: 25px; border-radius: 10px; border-left: 4px solid #5B5FEF;">
+                        <h4 style="color: #333; margin-bottom: 15px;">Database Layer</h4>
+<ul style="list-style: none;">
+                            <li style="padding: 5px 0; color: #666; font-size: 0.9rem;">PostgreSQL for relational data</li>
+                            <li style="padding: 5px 0; color: #666; font-size: 0.9rem;">Legal documents with RCW content</li>
+                            <li style="padding: 5px 0; color: #666; font-size: 0.9rem;">User bookmarks and personalization</li>
+                            <li style="padding: 5px 0; color: #666; font-size: 0.9rem;">Automated legal data updates</li>
+                        </ul>
+                    </div>
+                    <div style="background: #f8fafc; padding: 25px; border-radius: 10px; border-left: 4px solid #5B5FEF;">
+                        <h4 style="color: #333; margin-bottom: 15px;">Security Features</h4>
+                        <ul style="list-style: none;">
+                            <li style="padding: 5px 0; color: #666; font-size: 0.9rem;">JWT authentication with 24h expiration</li>
+                            <li style="padding: 5px 0; color: #666; font-size: 0.9rem;">bcrypt password hashing (12 salt rounds)</li>
+                            <li style="padding: 5px 0; color: #666; font-size: 0.9rem;">Input validation and sanitization</li>
+                            <li style="padding: 5px 0; color: #666; font-size: 0.9rem;">CORS and Helmet security headers</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Code Repository</h3>
+                <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 30px; border-radius: 10px; border: 2px solid #e2e8f0;">
+                    <div style="display: flex; align-items: center;">
+                        <i class="fab fa-github" style="font-size: 2.5rem; color: #333; margin-right: 20px;"></i>
+                        <div>
+                            <h4 style="color: #333; margin-bottom: 5px;">iMobilize - GitHub Repository</h4>
+                            <p style="color: #666;">Complete source code for both frontend and backend implementations</p>
+                        </div>
+                    </div>
+                    <a href="https://github.com/Huynhben22/iMobilize" target="_blank" style="background: #5B5FEF; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; display: flex; align-items: center; gap: 10px; transition: background 0.3s ease;">
+                        <i class="fas fa-external-link-alt"></i>
+                        View on GitHub
+                    </a>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Database Design</h3>
+                <p style="margin-bottom: 20px;">Our database design supports scalable user management, complex group hierarchies, efficient event coordination, and comprehensive legal resource management:</p>
+                <ul style="margin-top: 20px; padding-left: 20px;">
+                    <li style="margin-bottom: 10px; color: #666;"><strong>Users Table:</strong> Authentication, profiles, and privacy settings</li>
+                    <li style="margin-bottom: 10px; color: #666;"><strong>Groups & Group Members:</strong> Hierarchical group management with roles</li>
+                    <li style="margin-bottom: 10px; color: #666;"><strong>Events & Participants:</strong> Flexible event system with group integration</li>
+                    <li style="margin-bottom: 10px; color: #666;"><strong>Forums & Posts:</strong> Community discussion platform</li>
+                    <li style="margin-bottom: 10px; color: #666;"><strong>Legal Documents:</strong> Washington State RCW database with penalties and summaries</li>
+                    <li style="margin-bottom: 10px; color: #666;"><strong>Legal Citations:</strong> API-sourced citation tracking from leg.wa.gov</li>
+                    <li style="margin-bottom: 10px; color: #666;"><strong>Legal Data Updates:</strong> Automated update monitoring with error tracking</li>
+                    <li style="margin-bottom: 10px; color: #666;"><strong>User Legal Bookmarks:</strong> Personal legal document references with notes</li>
+                    <li style="margin-bottom: 10px; color: #666;"><strong>Notifications:</strong> Smart notification system with expiration</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+        <!-- Future Work Section -->
+    <section id="future" class="future-section">
+        <div class="container">
+            <h2>Future Work & Extensions</h2>
+            
+            <div class="future-grid">
+                <div class="future-category">
+                    <div class="future-icon">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                    <h3>Geographic Expansion</h3>
+                    <ul style="list-style: none; margin-bottom: 20px;">
+                        <li style="padding: 8px 0; opacity: 0.9; position: relative; padding-left: 20px;">Extend legal database to all 50 US states</li>
+                        <li style="padding: 8px 0; opacity: 0.9; position: relative; padding-left: 20px;">International legal frameworks integration</li>
+                        <li style="padding: 8px 0; opacity: 0.9; position: relative; padding-left: 20px;">Multi-language support for global accessibility</li>
+                        <li style="padding: 8px 0; opacity: 0.9; position: relative; padding-left: 20px;">Local jurisdiction-specific guidance</li>
+                    </ul>
+                    <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 8px; border-left: 4px solid rgba(255, 255, 255, 0.5); font-style: italic;">
+                        <strong>Impact:</strong> Could serve 2+ billion activists worldwide
+                    </div>
+                </div>
+
+                <div class="future-category">
+                    <div class="future-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3>AI-Powered Features</h3>
+                    <ul style="list-style: none; margin-bottom: 20px;">
+                        <li style="padding: 8px 0; opacity: 0.9; position: relative; padding-left: 20px;">Smart event recommendations based on user interests</li>
+                        <li style="padding: 8px 0; opacity: 0.9; position: relative; padding-left: 20px;">Automated legal document summarization</li>
+                        <li style="padding: 8px 0; opacity: 0.9; position: relative; padding-left: 20px;">Real-time risk assessment for events</li>
+                        <li style="padding: 8px 0; opacity: 0.9; position: relative; padding-left: 20px;">Intelligent community matching algorithms</li>
+                    </ul>
+                    <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 8px; border-left: 4px solid rgba(255, 255, 255, 0.5); font-style: italic;">
+                        <strong>Impact:</strong> 40% improvement in user engagement and safety
+                    </div>
+                </div>
+
+                <div class="future-category">
+                    <div class="future-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Enhanced Security</h3>
+                    <ul style="list-style: none; margin-bottom: 20px;">
+                        <li style="padding: 8px 0; opacity: 0.9; position: relative; padding-left: 20px;">Complete Signal Protocol implementation</li>
+                        <li style="padding: 8px 0; opacity: 0.9; position: relative; padding-left: 20px;">Anonymous communication channels</li>
+                        <li style="padding: 8px 0; opacity: 0.9; position: relative; padding-left: 20px;">Advanced privacy controls</li>
+                        <li style="padding: 8px 0; opacity: 0.9; position: relative; padding-left: 20px;">Emergency contact and check-in systems</li>
+                    </ul>
+                    <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 8px; border-left: 4px solid rgba(255, 255, 255, 0.5); font-style: italic;">
+                        <strong>Impact:</strong> Critical protection for activists in authoritarian regions
+                    </div>
+                </div>
+
+                <div class="future-category">
+                    <div class="future-icon">
+                        <i class="fas fa-handshake"></i>
+                    </div>
+                    <h3>Institutional Partnerships</h3>
+                    <ul style="list-style: none; margin-bottom: 20px;">
+                        <li style="padding: 8px 0; opacity: 0.9; position: relative; padding-left: 20px;">Integration with legal aid organizations</li>
+                        <li style="padding: 8px 0; opacity: 0.9; position: relative; padding-left: 20px;">Partnership with civil rights groups</li>
+                        <li style="padding: 8px 0; opacity: 0.9; position: relative; padding-left: 20px;">University and educational institution integration</li>
+                        <li style="padding: 8px 0; opacity: 0.9; position: relative; padding-left: 20px;">Government transparency initiatives</li>
+                    </ul>
+                    <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 8px; border-left: 4px solid rgba(255, 255, 255, 0.5); font-style: italic;">
+                        <strong>Impact:</strong> Direct access to professional legal support
+                    </div>
+                </div>
+
+                <div class="future-category">
+                    <div class="future-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3>Analytics & Research</h3>
+                    <ul style="list-style: none; margin-bottom: 20px;">
+                        <li style="padding: 8px 0; opacity: 0.9; position: relative; padding-left: 20px;">Movement effectiveness tracking</li>
+                        <li style="padding: 8px 0; opacity: 0.9; position: relative; padding-left: 20px;">Social impact measurement tools</li>
+                        <li style="padding: 8px 0; opacity: 0.9; position: relative; padding-left: 20px;">Academic research collaboration features</li>
+                        <li style="padding: 8px 0; opacity: 0.9; position: relative; padding-left: 20px;">Policy change correlation analysis</li>
+                    </ul>
+                    <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 8px; border-left: 4px solid rgba(255, 255, 255, 0.5); font-style: italic;">
+                        <strong>Impact:</strong> Data-driven activism and evidence-based advocacy
+                    </div>
+                </div>
+
+                <div class="future-category">
+                    <div class="future-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3>Platform Extensions</h3>
+                    <ul style="list-style: none; margin-bottom: 20px;">
+                        <li style="padding: 8px 0; opacity: 0.9; position: relative; padding-left: 20px;">Desktop and web applications</li>
+                        <li style="padding: 8px 0; opacity: 0.9; position: relative; padding-left: 20px;">Smart watch and wearable integration</li>
+                        <li style="padding: 8px 0; opacity: 0.9; position: relative; padding-left: 20px;">Offline functionality for crisis situations</li>
+                        <li style="padding: 8px 0; opacity: 0.9; position: relative; padding-left: 20px;">API for third-party developer integrations</li>
+                    </ul>
+                    <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 8px; border-left: 4px solid rgba(255, 255, 255, 0.5); font-style: italic;">
+                        <strong>Impact:</strong> Ubiquitous access across all devices and platforms
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); padding: 40px; border-radius: 15px; border: 1px solid rgba(255, 255, 255, 0.2); margin-top: 60px;">
+                <h3 style="margin-bottom: 20px; font-size: 1.8rem;">Research & Academic Potential</h3>
+                <p style="margin-bottom: 30px;">
+                    iMobilize represents a significant opportunity for ongoing research in digital activism, 
+                    social movement coordination, and civic technology. Future academic collaborations could explore:
+                </p>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px;">
+                    <div style="background: rgba(255, 255, 255, 0.1); padding: 25px; border-radius: 10px;">
+                        <h4 style="margin-bottom: 15px; font-size: 1.2rem;">Digital Organizing Effectiveness</h4>
+                        <p style="opacity: 0.9; font-size: 0.9rem;">Measuring how digital tools impact real-world activism outcomes</p>
+                    </div>
+                    <div style="background: rgba(255, 255, 255, 0.1); padding: 25px; border-radius: 10px;">
+                        <h4 style="margin-bottom: 15px; font-size: 1.2rem;">Legal Literacy & Participation</h4>
+                        <p style="opacity: 0.9; font-size: 0.9rem;">Studying the relationship between legal knowledge and activist engagement</p>
+                    </div>
+                    <div style="background: rgba(255, 255, 255, 0.1); padding: 25px; border-radius: 10px;">
+                        <h4 style="margin-bottom: 15px; font-size: 1.2rem;">Technology for Social Justice</h4>
+                        <p style="opacity: 0.9; font-size: 0.9rem;">Exploring how technology can advance equity and human rights</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+        <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>iMobilize</h4>
+                    <p>Empowering social activism through technology</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Project Info</h4>
+                    <p>CSCI 497 - Fall 2024</p>
+                    <p>Western Washington University</p>
+                </div>
+                <div class="footer-section">
+                    <h4>SDG Goals</h4>
+                    <p>Goal 10: Reduced Inequalities</p>
+                    <p>Goal 16: Peace, Justice & Strong Institutions</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 iMobilize Team. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>

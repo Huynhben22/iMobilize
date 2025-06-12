@@ -1,26 +1,38 @@
-// src/navigation/MainNavigator.js - Resolved merge with both features
+// src/navigation/MainNavigator.js - FIXED VERSION
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 
-// Import screens
+// Import main tab screens
 import HomeScreen from '../screens/main/HomeScreen';
 import CommunityScreen from '../screens/main/CommunityScreen';
-import OrganizerScreen from '../screens/main/OrganizerScreen';
 import ProfileScreen from '../screens/main/ProfileScreen';
+import OrganizerScreen from '../screens/main/OrganizerScreen';
 import ResourcesScreen from '../screens/main/ResourcesScreen';
-import LawDetailScreen from '../screens/main/LawDetailScreen';
+
+// Import detail screens
+import EventViewScreen from '../screens/main/EventViewScreen';
+import CommunityViewScreen from '../screens/main/CommunityViewScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-// Create a stack navigator for the Resources tab (from main branch)
-const ResourcesStack = () => {
+// Create stack navigators for tabs that need detail screens
+const HomeStackNavigator = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="ResourcesList" component={ResourcesScreen} />
-      <Stack.Screen name="LawDetail" component={LawDetailScreen} />
+      <Stack.Screen name="HomeMain" component={HomeScreen} />
+      <Stack.Screen name="EventViewScreen" component={EventViewScreen} />
+    </Stack.Navigator>
+  );
+};
+
+const CommunityStackNavigator = () => {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="CommunityMain" component={CommunityScreen} />
+      <Stack.Screen name="CommunityViewScreen" component={CommunityViewScreen} />
     </Stack.Navigator>
   );
 };
@@ -56,12 +68,12 @@ const MainNavigator = () => {
           paddingBottom: 8,
           paddingTop: 8,
         },
-        headerShown: false, // Hide default headers since screens have their own
+        headerShown: false,
       })}
     >
       <Tab.Screen 
         name="Home" 
-        component={HomeScreen}
+        component={HomeStackNavigator}
         options={{
           tabBarLabel: 'Home',
         }}
@@ -69,7 +81,7 @@ const MainNavigator = () => {
       
       <Tab.Screen 
         name="Community" 
-        component={CommunityScreen}
+        component={CommunityStackNavigator}
         options={{
           tabBarLabel: 'Community',
         }}
@@ -85,12 +97,12 @@ const MainNavigator = () => {
       
       <Tab.Screen 
         name="Resources" 
-        component={ResourcesStack}  // Use the stack navigator from main
+        component={ResourcesScreen}
         options={{
           tabBarLabel: 'Resources',
         }}
       />
-      
+     
       <Tab.Screen 
         name="Profile" 
         component={ProfileScreen}

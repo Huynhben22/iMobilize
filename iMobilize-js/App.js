@@ -1,4 +1,4 @@
-// App.js - Fixed to use MainNavigator
+// App.js - FIXED VERSION with proper authentication
 import React from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -12,7 +12,7 @@ import { AuthProvider, useAuth } from './src/context/AuthContext';
 // Import screens
 import WelcomeScreen from './src/screens/main/WelcomeScreen';
 import AuthScreen from './src/screens/main/AuthScreen';
-import MainNavigator from './src/navigation/MainNavigator'; // ← Import MainNavigator
+import MainNavigator from './src/navigation/MainNavigator'; 
 
 const Stack = createNativeStackNavigator();
 

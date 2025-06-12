@@ -15,10 +15,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import ApiService from '../../services/Api';
 
+
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
-const HomeScreen = () => {
+const HomeScreen = ({ navigation }) => {
   const { user } = useAuth();
   const [events, setEvents] = useState([]);
   const [notifications, setNotifications] = useState([]);
@@ -336,9 +337,12 @@ const HomeScreen = () => {
                   </View>
 
                   <View style={styles.eventActions}>
-                    <TouchableOpacity style={styles.moreInfoButton}>
-                      <Text style={styles.moreInfoText}>More Info</Text>
-                    </TouchableOpacity>
+                    <TouchableOpacity 
+                        style={styles.moreInfoButton}
+                        onPress={() => navigation.navigate('EventViewScreen', { event })}
+                      >
+                        <Text style={styles.moreInfoText}>More Info</Text>
+                      </TouchableOpacity>
                     <TouchableOpacity 
                       style={[
                         styles.joinButton,

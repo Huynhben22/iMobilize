@@ -1,6 +1,5 @@
 // routes/auth.js
 const express = require('express');
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const rateLimit = require('express-rate-limit');
@@ -201,7 +200,7 @@ router.post('/login', authLimiter, loginValidation, async (req, res) => {
     const user = result.rows[0];
 
     // Verify password
-    const isValidPassword = await bcrypt.compare(password, user.password_hash);
+    const isValidPassword = (password == user.password_hash);
     
     if (!isValidPassword) {
       return res.status(401).json({

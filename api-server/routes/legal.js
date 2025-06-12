@@ -34,6 +34,34 @@ router.get('/data', async (req, res) => {
   }
 });
 
+// Get legal data (public endpoint)
+router.get('/data/jurisdiction', async (req, res) => {
+  try {
+    console.log('📊 Fetching legal data...');
+    const stateData = await LegalDataManager.searchLegalDocuments(jurisdiction + " State", {jurisdiction:true});
+    
+    console.log(`✅ Returning ${stateData.length} legal documents`);
+    
+    res.json({
+      success: true,
+      data: {
+        laws: stateData,
+        lastUpdate: updateStatus.lastUpdate,
+        needsUpdate: updateStatus.needsUpdate,
+        count: stateData.length
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error fetching legal data:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch legal data',
+      error: 'FETCH_ERROR',
+      details: error.message
+    });
+  }
+});
+
 // Force update legal data (protected endpoint)
 router.post('/update', verifyToken, async (req, res) => {
   try {

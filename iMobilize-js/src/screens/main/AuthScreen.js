@@ -48,39 +48,39 @@ const AuthScreen = ({ navigation }) => {
   };
 
   const handleContinue = async () => {
-    if (!validateForm()) return;
+  if (!validateForm()) return;
 
-    setLoading(true);
+  setLoading(true);
+  
+  try {
+    let result;
     
-    try {
-      let result;
-      
-      if (isLogin) {
-        result = await login({
-          email: formData.email,
-          password: formData.password
-        });
-      } else {
-        result = await register({
-          username: formData.username,
-          email: formData.email,
-          password: formData.password,
-          display_name: formData.display_name,
-          terms_accepted: true
-        });
-      }
-
-      if (result.success) {
-        setShowTerms(true);
-      } else {
-        Alert.alert('Error', result.error || `${isLogin ? 'Login' : 'Registration'} failed`);
-      }
-    } catch (error) {
-      Alert.alert('Error', error.message || 'An unexpected error occurred');
-    } finally {
-      setLoading(false);
+    if (isLogin) {
+      result = await login({
+        email: formData.email,
+        password: formData.password
+      });
+    } else {
+      result = await register({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        display_name: formData.display_name,
+        terms_accepted: "true"  // CHANGED: from true to "true" (boolean to string)
+      });
     }
-  };
+
+    if (result.success) {
+      setShowTerms(true);
+    } else {
+      Alert.alert('Error', result.error || `${isLogin ? 'Login' : 'Registration'} failed`);
+    }
+  } catch (error) {
+    Alert.alert('Error', error.message || 'An unexpected error occurred');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleAccept = () => {
     setShowTerms(false);

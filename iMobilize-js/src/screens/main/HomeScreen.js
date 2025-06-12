@@ -116,15 +116,15 @@ const HomeScreen = ({ navigation }) => {
     shadowUrl: "https://unpkg.com/leaflet@1.6/dist/images/marker-shadow.png"
   });
 
-  function PopulateMarkers() {
-    return mapMarkers.map((mapMarkers) => {
-      return <Marker key={mapMarkers.id} position={[mapMarkers.latitude, mapMarkers.longitude]} icon={icon}>
-        <Popup>
-          <Text>{mapMarkers.title}<br/>{mapMarkers.description}<br/>{mapMarkers.start_time} - {mapMarkers.end_time}</Text>
-        </Popup>
-      </Marker>;
-    });
-  }
+  // function PopulateMarkers() {
+  //   return mapMarkers.map((mapMarkers) => {
+  //     return <Marker key={mapMarkers.id} position={[mapMarkers.latitude, mapMarkers.longitude]} icon={icon}>
+  //       <Popup>
+  //         <Text>{mapMarkers.title}<br/>{mapMarkers.description}<br/>{mapMarkers.start_time} - {mapMarkers.end_time}</Text>
+  //       </Popup>
+  //     </Marker>;
+  //   });
+  // }
 
   const formatEventDate = (dateString) => {
     const date = new Date(dateString);
@@ -385,7 +385,7 @@ const HomeScreen = ({ navigation }) => {
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            <PopulateMarkers/>
+            {/* <PopulateMarkers/> */}
           </MapContainer>
         </View>
       </ScrollView>

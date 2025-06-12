@@ -181,7 +181,7 @@ router.get('/', eventsLimiter, [
       LEFT JOIN groups g ON e.organizing_group_id = g.id
       LEFT JOIN event_participants ep ON e.id = ep.event_id AND ep.status = 'confirmed'
       LEFT JOIN group_members gm ON e.organizing_group_id = gm.group_id AND gm.user_id = $1
-      LEFT JOIN locations l ON e.location_id = l.location_id
+      LEFT JOIN locations l ON e.location_id = l.id
     `;
 
     const conditions = ['e.status = $2'];

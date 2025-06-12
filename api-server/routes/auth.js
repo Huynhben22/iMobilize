@@ -20,7 +20,6 @@ const authLimiter = rateLimit({
   }
 });
 
-// Validation rules
 const registerValidation = [
   body('username')
     .isLength({ min: 3, max: 50 })
@@ -33,11 +32,10 @@ const registerValidation = [
     .withMessage('Please provide a valid email address')
     .normalizeEmail(),
   
+  // SIMPLIFIED PASSWORD VALIDATION - just check length
   body('password')
     .isLength({ min: 8 })
-    .withMessage('Password must be at least 8 characters long')
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
-    .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'),
+    .withMessage('Password must be at least 8 characters long'),
   
   body('display_name')
     .optional()
@@ -62,13 +60,18 @@ const loginValidation = [
 
 /**
  * POST /api/auth/register
- * Register a new user
+ * Register a new user (WITH DEBUG LOGGING)
  */
 router.post('/register', authLimiter, registerValidation, async (req, res) => {
   try {
+    console.log('=== REGISTRATION ATTEMPT ===');
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    
     // Check validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('❌ VALIDATION FAILED:');
+      console.log('Errors:', JSON.stringify(errors.array(), null, 2));
       return res.status(400).json({
         success: false,
         message: 'Validation failed',
@@ -76,6 +79,8 @@ router.post('/register', authLimiter, registerValidation, async (req, res) => {
         details: errors.array()
       });
     }
+
+    console.log('✅ Validation passed');
 
     const { username, email, password, display_name, bio, privacy_level = 'standard' } = req.body;
 
@@ -89,12 +94,20 @@ router.post('/register', authLimiter, registerValidation, async (req, res) => {
     );
 
     if (existingUser.rows.length > 0) {
+      console.log('❌ User already exists');
       return res.status(409).json({
         success: false,
         message: 'Username or email already exists',
         error: 'USER_EXISTS'
       });
     }
+
+    console.log('✅ User does not exist, proceeding...');
+
+    // Hash password
+    const saltRounds = 12;
+    const password_hash = await bcrypt.hash(password, saltRounds);
+    console.log('✅ Password hashed');
 
     // Insert new user
     const result = await pool.query(
@@ -105,6 +118,7 @@ router.post('/register', authLimiter, registerValidation, async (req, res) => {
     );
 
     const newUser = result.rows[0];
+    console.log('✅ User created with ID:', newUser.id);
 
     // Generate JWT token
     const token = jwt.sign(
@@ -118,6 +132,8 @@ router.post('/register', authLimiter, registerValidation, async (req, res) => {
       'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1',
       [newUser.id]
     );
+
+    console.log('✅ REGISTRATION SUCCESSFUL');
 
     res.status(201).json({
       success: true,
@@ -137,7 +153,7 @@ router.post('/register', authLimiter, registerValidation, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error('❌ REGISTRATION ERROR:', error);
     res.status(500).json({
       success: false,
       message: 'Registration failed',

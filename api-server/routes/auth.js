@@ -96,10 +96,6 @@ router.post('/register', authLimiter, registerValidation, async (req, res) => {
       });
     }
 
-    // Hash password
-    const saltRounds = 12;
-    const password_hash = await bcrypt.hash(password, saltRounds);
-
     // Insert new user
     const result = await pool.query(
       `INSERT INTO users (username, email, password_hash, display_name, bio, privacy_level, terms_accepted, created_at, updated_at)

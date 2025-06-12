@@ -15,6 +15,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../context/AuthContext';
 import ApiService from '../../services/Api';
 
+import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+
 const HomeScreen = () => {
   const { user } = useAuth();
   const [events, setEvents] = useState([]);
@@ -24,6 +27,7 @@ const HomeScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [joinedEvents, setJoinedEvents] = useState(new Set());
+  const [mapMarkers, setMapMarkers] = useState([]);
 
   // Load data on component mount
   useEffect(() => {
@@ -36,10 +40,11 @@ const HomeScreen = () => {
       setError(null);
 
       // Load multiple data sources in parallel
-      const [eventsResponse, groupsResponse, notificationsResponse] = await Promise.all([
+      const [eventsResponse, groupsResponse, notificationsResponse, mapResponse] = await Promise.all([
         ApiService.getEvents({ limit: 10, status: 'upcoming' }),
         ApiService.getMyGroups({ limit: 10 }),
-        ApiService.getNotifications({ limit: 5, unread_only: true })
+        ApiService.getNotifications({ limit: 5, unread_only: true }),
+        ApiService.getEvents({status: 'upcoming'})
       ]);
 
       if (eventsResponse.success) {
@@ -52,6 +57,11 @@ const HomeScreen = () => {
 
       if (notificationsResponse.success) {
         setNotifications(notificationsResponse.data.notifications || []);
+      }
+
+      if (mapResponse.success)
+      {
+        setMapMarkers(mapResponse.data.events || []);
       }
 
     } catch (error) {
@@ -96,6 +106,24 @@ const HomeScreen = () => {
       }
     }
   };
+
+  const icon = L.icon({
+    iconSize: [25, 41],
+    iconAnchor: [10, 41],
+    popupAnchor: [2, -40],
+    iconUrl: "https://unpkg.com/leaflet@1.6/dist/images/marker-icon.png",
+    shadowUrl: "https://unpkg.com/leaflet@1.6/dist/images/marker-shadow.png"
+  });
+
+  function PopulateMarkers() {
+    return mapMarkers.map((mapMarkers) => {
+      return <Marker key={mapMarkers.id} position={[mapMarkers.latitude, mapMarkers.longitude]} icon={icon}>
+        <Popup>
+          <Text>{mapMarkers.title}<br/>{mapMarkers.description}<br/>{mapMarkers.start_time} - {mapMarkers.end_time}</Text>
+        </Popup>
+      </Marker>;
+    });
+  }
 
   const formatEventDate = (dateString) => {
     const date = new Date(dateString);
@@ -238,6 +266,7 @@ const HomeScreen = () => {
           </View>
         </View>
 
+
         {/* Upcoming Events Section */}
         <View style={styles.feedContainer}>
           <Text style={styles.feedTitle}>Upcoming Events</Text>
@@ -346,6 +375,14 @@ const HomeScreen = () => {
               Safety protocols and resources available for all events
             </Text>
           </View>
+
+          <MapContainer style={{ height: '500px', width: '100%' }} center={[48.7343, -122.4866]} zoom={13} scrollWheelZoom={false}>
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            <PopulateMarkers/>
+          </MapContainer>
         </View>
       </ScrollView>
     </SafeAreaView>

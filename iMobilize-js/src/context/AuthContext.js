@@ -1,6 +1,7 @@
 // src/context/AuthContext.js - Original Working Version
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import ApiService from '../services/Api';
+//import crypto from 'crypto';
 
 const AuthContext = createContext();
 
@@ -95,6 +96,9 @@ export const AuthProvider = ({ children }) => {
     try {
       dispatch({ type: 'LOADING' });
       
+      hashPass = (await crypto.subtle.digest('SHA-256', new ArrayBuffer(credentials.password)));
+      credentials.password = String.fromCharCode.apply(null, new Uint8Array(hashPass));
+
       const response = await ApiService.login(credentials);
       
       if (response.success) {
@@ -116,6 +120,10 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       dispatch({ type: 'LOADING' });
+      
+      // SHA-256 hash password before transmitting
+      hashPass = (await crypto.subtle.digest('SHA-256', new ArrayBuffer(userData.password)));
+      userData.password = String.fromCharCode.apply(null, new Uint8Array(hashPass));
       
       const response = await ApiService.register(userData);
       

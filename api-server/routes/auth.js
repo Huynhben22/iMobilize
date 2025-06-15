@@ -1,5 +1,6 @@
-// routes/auth.js
+// routes/auth.js - FIXED VERSION
 const express = require('express');
+const bcrypt = require('bcryptjs'); // ← MISSING IMPORT - This was causing the error!
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const rateLimit = require('express-rate-limit');
@@ -19,6 +20,7 @@ const authLimiter = rateLimit({
   }
 });
 
+// Validation rules
 const registerValidation = [
   body('username')
     .isLength({ min: 3, max: 50 })
@@ -31,10 +33,11 @@ const registerValidation = [
     .withMessage('Please provide a valid email address')
     .normalizeEmail(),
   
-  // SIMPLIFIED PASSWORD VALIDATION - just check length
   body('password')
     .isLength({ min: 8 })
-    .withMessage('Password must be at least 8 characters long'),
+    .withMessage('Password must be at least 8 characters long')
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+    .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'),
   
   body('display_name')
     .optional()
@@ -59,7 +62,7 @@ const loginValidation = [
 
 /**
  * POST /api/auth/register
- * Register a new user (WITH DEBUG LOGGING)
+ * Register a new user
  */
 router.post('/register', authLimiter, registerValidation, async (req, res) => {
   try {
@@ -69,8 +72,7 @@ router.post('/register', authLimiter, registerValidation, async (req, res) => {
     // Check validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      console.log('❌ VALIDATION FAILED:');
-      console.log('Errors:', JSON.stringify(errors.array(), null, 2));
+      console.log('❌ VALIDATION FAILED:', errors.array());
       return res.status(400).json({
         success: false,
         message: 'Validation failed',
@@ -78,8 +80,6 @@ router.post('/register', authLimiter, registerValidation, async (req, res) => {
         details: errors.array()
       });
     }
-
-    console.log('✅ Validation passed');
 
     const { username, email, password, display_name, bio, privacy_level = 'standard' } = req.body;
 
@@ -101,12 +101,12 @@ router.post('/register', authLimiter, registerValidation, async (req, res) => {
       });
     }
 
-    console.log('✅ User does not exist, proceeding...');
+    console.log('✅ User does not exist, proceeding with registration...');
 
     // Hash password
     const saltRounds = 12;
     const password_hash = await bcrypt.hash(password, saltRounds);
-    console.log('✅ Password hashed');
+    console.log('✅ Password hashed successfully');
 
     // Insert new user
     const result = await pool.query(
@@ -167,9 +167,13 @@ router.post('/register', authLimiter, registerValidation, async (req, res) => {
  */
 router.post('/login', authLimiter, loginValidation, async (req, res) => {
   try {
+    console.log('=== LOGIN ATTEMPT ===');
+    console.log('Email:', req.body.email);
+    
     // Check validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('❌ Login validation failed:', errors.array());
       return res.status(400).json({
         success: false,
         message: 'Validation failed',
@@ -190,6 +194,7 @@ router.post('/login', authLimiter, loginValidation, async (req, res) => {
     );
 
     if (result.rows.length === 0) {
+      console.log('❌ User not found for email:', email);
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password',
@@ -198,17 +203,22 @@ router.post('/login', authLimiter, loginValidation, async (req, res) => {
     }
 
     const user = result.rows[0];
+    console.log('✅ User found:', user.username);
 
-    // Verify password
-    const isValidPassword = (password == user.password_hash);
+    // Verify password using bcrypt - THIS WAS THE MAIN BUG!
+    const isValidPassword = await bcrypt.compare(password, user.password_hash);
+    console.log('🔍 Password verification result:', isValidPassword);
     
     if (!isValidPassword) {
+      console.log('❌ Invalid password for user:', user.username);
       return res.status(401).json({
         success: false,
         message: 'Invalid email or password',
         error: 'INVALID_CREDENTIALS'
       });
     }
+
+    console.log('✅ Password verified successfully');
 
     // Generate JWT token
     const token = jwt.sign(
@@ -222,6 +232,8 @@ router.post('/login', authLimiter, loginValidation, async (req, res) => {
       'UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1',
       [user.id]
     );
+
+    console.log('✅ LOGIN SUCCESSFUL for user:', user.username);
 
     res.json({
       success: true,
@@ -241,7 +253,7 @@ router.post('/login', authLimiter, loginValidation, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('❌ LOGIN ERROR:', error);
     res.status(500).json({
       success: false,
       message: 'Login failed',
@@ -280,9 +292,6 @@ router.get('/verify', verifyToken, async (req, res) => {
  */
 router.post('/logout', verifyToken, async (req, res) => {
   try {
-    // In a simple JWT implementation, logout is handled client-side
-    // For enhanced security, you could implement a token blacklist
-    
     res.json({
       success: true,
       message: 'Logout successful'
@@ -394,59 +403,6 @@ router.put('/profile', verifyToken, [
       error: 'UPDATE_ERROR'
     });
   }
-});
-
-/**
- * POST /api/auth/forgot-password
- * Password reset initiation (placeholder for future implementation)
- */
-router.post('/forgot-password', authLimiter, [
-  body('email')
-    .isEmail()
-    .withMessage('Please provide a valid email address')
-    .normalizeEmail()
-], async (req, res) => {
-  // TODO: Implement password reset functionality
-  // This would typically:
-  // 1. Generate a secure reset token
-  // 2. Store token with expiration in database
-  // 3. Send reset email to user
-  // 4. Return success message (don't reveal if email exists)
-  
-  res.status(501).json({
-    success: false,
-    message: 'Password reset functionality not yet implemented',
-    error: 'NOT_IMPLEMENTED'
-  });
-});
-
-/**
- * POST /api/auth/reset-password
- * Password reset completion (placeholder for future implementation)
- */
-router.post('/reset-password', authLimiter, [
-  body('token')
-    .notEmpty()
-    .withMessage('Reset token is required'),
-  body('password')
-    .isLength({ min: 8 })
-    .withMessage('Password must be at least 8 characters long')
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
-    .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character')
-], async (req, res) => {
-  // TODO: Implement password reset completion
-  // This would typically:
-  // 1. Validate reset token and check expiration
-  // 2. Hash new password
-  // 3. Update user password in database
-  // 4. Invalidate reset token
-  // 5. Return success message
-  
-  res.status(501).json({
-    success: false,
-    message: 'Password reset functionality not yet implemented',
-    error: 'NOT_IMPLEMENTED'
-  });
 });
 
 module.exports = router;

@@ -170,6 +170,33 @@ class ApiService {
     });
   }
 
+  // src/services/Api.js - Add this method to your existing ApiService class
+
+// 🔥 NEW: Add this method to your ApiService class
+async getGroupEvents(groupId, params = {}) {
+  console.log('🌐 API: Getting events for group', groupId, 'with params:', params);
+  
+  try {
+    // Build query string from params
+    const queryParams = new URLSearchParams();
+    
+    if (params.limit) queryParams.append('limit', params.limit);
+    if (params.offset) queryParams.append('offset', params.offset);
+    if (params.status) queryParams.append('status', params.status);
+    
+    const queryString = queryParams.toString();
+    const url = `/events/groups/${groupId}/events${queryString ? `?${queryString}` : ''}`;
+    
+    const response = await this.request(url);
+    
+    console.log('✅ API: Group events response:', response?.success ? 'SUCCESS' : 'FAILED');
+    return response;
+  } catch (error) {
+    console.error('❌ API: Get group events error:', error);
+    throw error;
+  }
+}
+
   // ===========================================
   // GROUPS ENDPOINTS
   // ===========================================
@@ -271,6 +298,8 @@ class ApiService {
       }
     });
 
+    
+
     const endpoint = `/community/forums${queryParams.toString() ? `?${queryParams}` : ''}`;
     return this.request(endpoint);
   }
@@ -328,6 +357,7 @@ class ApiService {
       method: 'DELETE',
     });
   }
+  
 
   // ===========================================
   // NOTIFICATIONS ENDPOINTS (NEW!)

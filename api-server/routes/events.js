@@ -22,7 +22,7 @@ const eventsLimiter = rateLimit({
 // Stricter rate limiting for creating events
 const createEventLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // limit each IP to 10 event creations per windowMs
+  max: 100, // limit each IP to 10 event creations per windowMs
   message: {
     success: false,
     message: 'Too many event creations, please try again later',
@@ -291,8 +291,13 @@ router.get('/', eventsLimiter, [
  */
 router.post('/', verifyToken, createEventLimiter, eventValidation, async (req, res) => {
   try {
+    console.log('=== EVENT CREATION ATTEMPT ===');
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('❌ EVENT VALIDATION FAILED:');
+      console.log('Errors:', JSON.stringify(errors.array(), null, 2));
       return res.status(400).json({
         success: false,
         message: 'Validation failed',
@@ -300,6 +305,8 @@ router.post('/', verifyToken, createEventLimiter, eventValidation, async (req, r
         details: errors.array()
       });
     }
+
+    console.log('✅ Event validation passed');
 
     const {
       title,
@@ -317,14 +324,28 @@ router.post('/', verifyToken, createEventLimiter, eventValidation, async (req, r
     const userId = req.user.id;
     const pool = getPostgreSQLPool();
 
+    console.log('📝 Event data extracted:', {
+      title,
+      description: description ? 'Set' : 'Not set',
+      start_time,
+      end_time,
+      location_description,
+      category,
+      organizing_group_id,
+      userId
+    });
+
     // If organizing group is specified, verify user permissions
     if (organizing_group_id) {
+      console.log('🔍 Checking group permissions for group:', organizing_group_id);
+      
       const groupMember = await pool.query(
         'SELECT role FROM group_members WHERE group_id = $1 AND user_id = $2',
         [organizing_group_id, userId]
       );
 
       if (groupMember.rows.length === 0) {
+        console.log('❌ User not a member of group');
         return res.status(403).json({
           success: false,
           message: 'You must be a member of the group to organize events for it',
@@ -334,7 +355,10 @@ router.post('/', verifyToken, createEventLimiter, eventValidation, async (req, r
 
       // Only admins and moderators can create events for groups
       const userRole = groupMember.rows[0].role;
+      console.log('✅ User role in group:', userRole);
+      
       if (!['admin', 'moderator'].includes(userRole)) {
+        console.log('❌ Insufficient group permissions');
         return res.status(403).json({
           success: false,
           message: 'Only group admins and moderators can organize events',
@@ -356,6 +380,8 @@ router.post('/', verifyToken, createEventLimiter, eventValidation, async (req, r
       }
     }
 
+    console.log('🗄️ Inserting event into database...');
+
     // Create event with group integration
     const result = await pool.query(`
       INSERT INTO events (
@@ -373,6 +399,7 @@ router.post('/', verifyToken, createEventLimiter, eventValidation, async (req, r
     ]);
 
     const newEvent = result.rows[0];
+    console.log('✅ Event created with ID:', newEvent.id);
 
     // Add organizer as participant
     await pool.query(`
@@ -380,7 +407,9 @@ router.post('/', verifyToken, createEventLimiter, eventValidation, async (req, r
       VALUES ($1, $2, 'organizer', 'confirmed', CURRENT_TIMESTAMP)
     `, [newEvent.id, userId]);
 
-     if (organizing_group_id) {
+    console.log('✅ Organizer added as participant');
+
+    if (organizing_group_id) {
       try {
         const notificationsCreated = await createGroupEventNotification(
           organizing_group_id,
@@ -395,6 +424,8 @@ router.post('/', verifyToken, createEventLimiter, eventValidation, async (req, r
       }
     }
 
+    console.log('🎉 EVENT CREATION SUCCESSFUL');
+
     res.status(201).json({
       success: true,
       message: organizing_group_id 
@@ -406,7 +437,7 @@ router.post('/', verifyToken, createEventLimiter, eventValidation, async (req, r
     });
 
   } catch (error) {
-    console.error('Create event error:', error);
+    console.error('❌ Create event error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to create event',

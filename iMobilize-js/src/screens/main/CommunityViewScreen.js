@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+// src/screens/main/CommunityViewScreen.js - FIXED with Safe Parameter Handling
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   StyleSheet,
   View,
@@ -9,30 +10,78 @@ import {
   RefreshControl,
   Alert,
   Share,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
+import ApiService from '../../services/Api';
 
 const CommunityViewScreen = ({ route, navigation }) => {
-  const { movement } = route.params;
+  // 🔥 FIXED: Safe parameter extraction with fallback
+  const movement = route?.params?.movement || {
+    id: null,
+    name: 'Unknown Group',
+    description: 'No description available.',
+    members: 0,
+    category: 'other',
+    isFollowing: false
+  };
+
+  console.log('🏠 CommunityViewScreen loaded with movement:', movement);
+
+  // Early return if no valid movement ID
+  if (!movement.id) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="arrow-back" size={24} color="white" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Group Details</Text>
+        </View>
+        <View style={styles.errorContainer}>
+          <Ionicons name="alert-circle-outline" size={48} color="#F44336" />
+          <Text style={styles.errorText}>Group not found</Text>
+          <Text style={styles.errorSubtext}>Unable to load group information.</Text>
+          <TouchableOpacity 
+            style={styles.retryButton} 
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.retryText}>Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState('feed');
   const [isFollowing, setIsFollowing] = useState(movement?.isFollowing || false);
   const [joinedEvents, setJoinedEvents] = useState([]);
+  
+  // State for real API data
+  const [events, setEvents] = useState([]);
+  const [loadingEvents, setLoadingEvents] = useState(false);
+  const [eventsError, setEventsError] = useState(null);
 
+  // Mock data for announcements and resources
   const feedData = {
     announcements: [
       {
         id: 1,
-        author: 'Climate Action Organizers',
-        content: "Important update: Our next rally has been moved to City Hall Plaza due to increased attendance expectations. We're expecting over 500 participants!",
+        author: `${movement.name} Organizers`,
+        content: `Important update: Our group has been growing rapidly! We now have ${movement.members} members working together for positive change.`,
         timestamp: '2 hours ago',
         type: 'announcement',
         pinned: true,
       },
       {
         id: 2,
-        author: 'Sarah Chen - Lead Organizer',
-        content: "Thank you to everyone who attended last week's workshop! We had 150+ attendees and raised $2,400 for renewable energy advocacy. Together, we're making a real difference.",
+        author: 'Lead Organizer',
+        content: "Thank you to everyone who has joined our movement! Together, we're making a real difference in our community.",
         timestamp: '1 day ago',
         type: 'update',
         likes: 42,
@@ -40,49 +89,17 @@ const CommunityViewScreen = ({ route, navigation }) => {
       },
       {
         id: 3,
-        author: 'Climate Action Team',
-        content: "Reminder: Volunteer training session this Saturday at 10 AM. We'll cover protest safety, effective messaging, and community outreach strategies.",
+        author: `${movement.name} Team`,
+        content: "Check out our latest events and join us in making positive change happen!",
         timestamp: '2 days ago',
         type: 'announcement',
-      },
-    ],
-    events: [
-      {
-        id: 1,
-        title: 'Climate Action Rally',
-        location_description: 'City Hall Plaza, Downtown',
-        start_time: '2025-06-15T14:00:00Z',
-        participant_count: 487,
-        category: 'rally',
-        organizing_group_name: 'Climate Action Coalition',
-        description: 'Join us for a peaceful demonstration calling for immediate climate action legislation.',
-      },
-      {
-        id: 2,
-        title: 'Renewable Energy Workshop',
-        location_description: 'Community Center, Room 205',
-        start_time: '2025-06-20T18:00:00Z',
-        participant_count: 23,
-        category: 'training',
-        organizing_group_name: 'Climate Action Coalition',
-        description: 'Learn about solar panel installation and home energy efficiency.',
-      },
-      {
-        id: 3,
-        title: 'Green Tech Fundraiser',
-        location_description: 'Riverside Park Pavilion',
-        start_time: '2025-06-25T16:00:00Z',
-        participant_count: 156,
-        category: 'fundraiser',
-        organizing_group_name: 'Climate Action Coalition',
-        description: 'Community gathering to raise funds for local green technology initiatives.',
       },
     ],
     resources: [
       {
         id: 1,
-        title: 'Climate Action Toolkit',
-        description: 'Comprehensive guide to organizing effective climate advocacy campaigns.',
+        title: 'Community Action Toolkit',
+        description: 'Comprehensive guide to organizing effective community advocacy campaigns.',
         type: 'guide',
         downloadUrl: '#',
       },
@@ -95,23 +112,78 @@ const CommunityViewScreen = ({ route, navigation }) => {
       },
       {
         id: 3,
-        title: 'Peaceful Protest Safety Guidelines',
+        title: 'Peaceful Action Safety Guidelines',
         description: 'Essential safety information for all participants in peaceful demonstrations.',
         type: 'safety',
         downloadUrl: '#',
       },
       {
         id: 4,
-        title: 'Climate Science Facts & Figures',
-        description: 'Latest scientific data and statistics to support your advocacy efforts.',
+        title: 'Latest Research & Data',
+        description: 'Current statistics and research to support your advocacy efforts.',
         type: 'data',
         downloadUrl: '#',
       },
     ],
   };
 
+  // Load events when component mounts or movement changes
+  useEffect(() => {
+    if (movement && movement.id) {
+      loadGroupEvents();
+    }
+  }, [movement]);
+
+  // Auto-refresh when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      console.log('🏠 CommunityViewScreen focused - refreshing events...');
+      if (movement && movement.id) {
+        loadGroupEvents();
+      }
+    }, [movement])
+  );
+
+  // Load real events from API
+  const loadGroupEvents = async () => {
+    try {
+      setLoadingEvents(true);
+      setEventsError(null);
+      
+      console.log('📅 Loading events for group:', movement.id, movement.name);
+      
+      // Use the group events API endpoint
+      const response = await ApiService.getGroupEvents(movement.id, {
+        limit: 20,
+        status: 'upcoming'
+      });
+      
+      if (response && response.success) {
+        console.log('✅ Loaded', response.data.events?.length || 0, 'group events');
+        setEvents(response.data.events || []);
+      } else {
+        console.log('⚠️ Failed to load group events:', response?.message);
+        setEventsError(response?.message || 'Failed to load events');
+        setEvents([]);
+      }
+      
+    } catch (error) {
+      console.error('❌ Error loading group events:', error);
+      setEventsError('Unable to load events. Please try again.');
+      setEvents([]);
+    } finally {
+      setLoadingEvents(false);
+    }
+  };
+
   const onRefresh = async () => {
     setRefreshing(true);
+    
+    // Refresh events when user pulls to refresh
+    if (activeTab === 'events' && movement && movement.id) {
+      await loadGroupEvents();
+    }
+    
     setTimeout(() => setRefreshing(false), 1000);
   };
 
@@ -150,10 +222,31 @@ const CommunityViewScreen = ({ route, navigation }) => {
     );
   };
 
-  const handleJoinEvent = (eventId, eventTitle) => {
-    if (!joinedEvents.includes(eventId)) {
-      setJoinedEvents([...joinedEvents, eventId]);
-      Alert.alert('Success! 🎉', `You have successfully joined "${eventTitle}"!`);
+  // Handle joining events with API
+  const handleJoinEvent = async (eventId, eventTitle) => {
+    try {
+      console.log('🎫 Joining event:', eventTitle, '(ID:', eventId, ')');
+      
+      const response = await ApiService.joinEvent(eventId);
+      
+      if (response && response.success) {
+        setJoinedEvents([...joinedEvents, eventId]);
+        Alert.alert('Success! 🎉', `You have successfully joined "${eventTitle}"!`);
+        
+        // Refresh events to get updated participant count
+        await loadGroupEvents();
+      } else {
+        // Handle "already participating" silently
+        if (response?.message?.includes('already participating')) {
+          setJoinedEvents([...joinedEvents, eventId]);
+          console.log('✅ Event marked as already joined');
+        } else {
+          Alert.alert('Error', response?.message || 'Failed to join event');
+        }
+      }
+    } catch (error) {
+      console.error('❌ Join event error:', error);
+      Alert.alert('Error', 'Failed to join event. Please try again.');
     }
   };
 
@@ -235,53 +328,102 @@ const CommunityViewScreen = ({ route, navigation }) => {
       case 'events':
         return (
           <View>
-            <Text style={styles.sectionTitle}>Movement Events</Text>
-            {feedData.events.map((event) => (
-              <View key={event.id} style={styles.eventCard}>
-                <View style={styles.eventHeader}>
-                  <Text style={styles.eventTitle}>{event.title}</Text>
-                  <Ionicons name={getCategoryIcon(event.category)} size={20} color="#5B5FEF" />
-                </View>
-                <Text style={styles.eventDescription}>{event.description}</Text>
-                <View style={styles.eventDetail}>
-                  <Ionicons name="location-outline" size={16} color="#666" />
-                  <Text style={styles.eventDetailText}>{event.location_description}</Text>
-                </View>
-                <View style={styles.eventDetail}>
-                  <Ionicons name="calendar-outline" size={16} color="#666" />
-                  <Text style={styles.eventDetailText}>{formatEventDate(event.start_time)}</Text>
-                </View>
-                <View style={styles.eventDetail}>
-                  <Ionicons name="people-outline" size={16} color="#666" />
-                  <Text style={styles.eventDetailText}>{event.participant_count} attending</Text>
-                </View>
-                <View style={styles.eventActions}>
-                  <TouchableOpacity
-                    style={styles.moreInfoButton}
-                    onPress={() => navigation.navigate('EventViewScreen', { event })}
-                  >
-                    <Text style={styles.moreInfoText}>More Info</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.joinButton,
-                      joinedEvents.includes(event.id) && styles.joinedButton,
-                    ]}
-                    onPress={() => handleJoinEvent(event.id, event.title)}
-                    disabled={joinedEvents.includes(event.id)}
-                  >
-                    <Text
-                      style={[
-                        styles.joinText,
-                        joinedEvents.includes(event.id) && styles.joinedText,
-                      ]}
-                    >
-                      {joinedEvents.includes(event.id) ? 'Joined ✓' : 'Join'}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
+            <View style={styles.eventsHeader}>
+              <Text style={styles.sectionTitle}>Group Events</Text>
+              <TouchableOpacity 
+                style={styles.refreshButton}
+                onPress={loadGroupEvents}
+                disabled={loadingEvents}
+              >
+                {loadingEvents ? (
+                  <ActivityIndicator size="small" color="#5B5FEF" />
+                ) : (
+                  <Ionicons name="refresh-outline" size={20} color="#5B5FEF" />
+                )}
+              </TouchableOpacity>
+            </View>
+            
+            {/* Loading State */}
+            {loadingEvents && events.length === 0 && (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#5B5FEF" />
+                <Text style={styles.loadingText}>Loading events...</Text>
               </View>
-            ))}
+            )}
+            
+            {/* Error State */}
+            {eventsError && (
+              <View style={styles.errorContainer}>
+                <Ionicons name="alert-circle-outline" size={24} color="#F44336" />
+                <Text style={styles.errorText}>{eventsError}</Text>
+                <TouchableOpacity style={styles.retryButton} onPress={loadGroupEvents}>
+                  <Text style={styles.retryText}>Try Again</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+            
+            {/* Events List */}
+            {!loadingEvents && !eventsError && events.length > 0 && (
+              <>
+                {events.map((event) => (
+                  <View key={event.id} style={styles.eventCard}>
+                    <View style={styles.eventHeader}>
+                      <Text style={styles.eventTitle}>{event.title}</Text>
+                      <Ionicons name={getCategoryIcon(event.category)} size={20} color="#5B5FEF" />
+                    </View>
+                    <Text style={styles.eventDescription}>{event.description}</Text>
+                    <View style={styles.eventDetail}>
+                      <Ionicons name="location-outline" size={16} color="#666" />
+                      <Text style={styles.eventDetailText}>{event.location_description}</Text>
+                    </View>
+                    <View style={styles.eventDetail}>
+                      <Ionicons name="calendar-outline" size={16} color="#666" />
+                      <Text style={styles.eventDetailText}>{formatEventDate(event.start_time)}</Text>
+                    </View>
+                    <View style={styles.eventDetail}>
+                      <Ionicons name="people-outline" size={16} color="#666" />
+                      <Text style={styles.eventDetailText}>{event.participant_count || 0} attending</Text>
+                    </View>
+                    <View style={styles.eventActions}>
+                      <TouchableOpacity
+                        style={styles.moreInfoButton}
+                        onPress={() => navigation.navigate('EventViewScreen', { event })}
+                      >
+                        <Text style={styles.moreInfoText}>More Info</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[
+                          styles.joinButton,
+                          joinedEvents.includes(event.id) && styles.joinedButton,
+                        ]}
+                        onPress={() => handleJoinEvent(event.id, event.title)}
+                        disabled={joinedEvents.includes(event.id)}
+                      >
+                        <Text
+                          style={[
+                            styles.joinText,
+                            joinedEvents.includes(event.id) && styles.joinedText,
+                          ]}
+                        >
+                          {joinedEvents.includes(event.id) ? 'Joined ✓' : 'Join'}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ))}
+              </>
+            )}
+            
+            {/* Empty State */}
+            {!loadingEvents && !eventsError && events.length === 0 && (
+              <View style={styles.emptyEventsContainer}>
+                <Ionicons name="calendar-outline" size={48} color="#CCC" />
+                <Text style={styles.emptyEventsText}>No Events Yet</Text>
+                <Text style={styles.emptyEventsSubtext}>
+                  This group hasn't organized any events yet. Check back later!
+                </Text>
+              </View>
+            )}
           </View>
         );
       case 'resources':
@@ -309,6 +451,7 @@ const CommunityViewScreen = ({ route, navigation }) => {
         return null;
     }
   };
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -397,10 +540,16 @@ const CommunityViewScreen = ({ route, navigation }) => {
           </TouchableOpacity>
           <TouchableOpacity 
             style={[styles.tab, activeTab === 'events' && styles.activeTab]}
-            onPress={() => setActiveTab('events')}
+            onPress={() => {
+              setActiveTab('events');
+              // Load events when switching to events tab
+              if (movement && movement.id) {
+                loadGroupEvents();
+              }
+            }}
           >
             <Text style={[styles.tabText, activeTab === 'events' && styles.activeTabText]}>
-              Events
+              Events {events.length > 0 && `(${events.length})`}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity 
@@ -459,6 +608,40 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  
+  // 🔥 NEW: Error container styles
+  errorContainer: {
+    alignItems: 'center',
+    padding: 40,
+    backgroundColor: '#FFEBEE',
+    borderRadius: 10,
+    margin: 20,
+  },
+  errorText: {
+    color: '#F44336',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginVertical: 10,
+    textAlign: 'center',
+  },
+  errorSubtext: {
+    color: '#F44336',
+    fontSize: 14,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  retryButton: {
+    backgroundColor: '#F44336',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 6,
+  },
+  retryText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  
   movementInfoContainer: {
     backgroundColor: 'white',
     padding: 20,
@@ -576,6 +759,44 @@ const styles = StyleSheet.create({
     color: '#5B5FEF',
     marginBottom: 15,
   },
+  
+  // Events-specific styles
+  eventsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  refreshButton: {
+    padding: 8,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    padding: 40,
+  },
+  loadingText: {
+    marginTop: 10,
+    color: '#666',
+    fontSize: 14,
+  },
+  emptyEventsContainer: {
+    alignItems: 'center',
+    padding: 40,
+  },
+  emptyEventsText: {
+    fontSize: 16,
+    color: '#999',
+    fontWeight: '500',
+    marginTop: 12,
+  },
+  emptyEventsSubtext: {
+    fontSize: 14,
+    color: '#CCC',
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  
+  // Existing styles (announcements, events, resources)
   announcementCard: {
     backgroundColor: '#F9F9F9',
     borderRadius: 10,

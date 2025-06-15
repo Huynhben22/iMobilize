@@ -1,4 +1,4 @@
-// src/screens/main/OrganizerScreen.js - Enhanced with API Integration
+// src/screens/main/OrganizerScreen.js - ENHANCED VERSION WITH DEBUGGING
 import React, { useState, useEffect } from 'react';
 import { 
   View, Text, ScrollView, StyleSheet, TouchableOpacity, Modal, 
@@ -45,7 +45,7 @@ const OrganizerScreen = ({ navigation }) => {
       // Load user's groups and created events
       const [groupsResponse, eventsResponse] = await Promise.all([
         ApiService.getMyGroups({ limit: 50 }),
-        ApiService.getEvents({ limit: 50, status: 'upcoming' }) // We'll filter organizer events client-side for now
+        ApiService.getEvents({ limit: 50, status: 'upcoming' })
       ]);
 
       if (groupsResponse.success) {
@@ -104,48 +104,108 @@ const OrganizerScreen = ({ navigation }) => {
     }
   };
 
+  // Helper function to generate dates
+  const generateDateString = (daysFromNow, hour = 14) => {
+    const date = new Date();
+    date.setDate(date.getDate() + daysFromNow);
+    date.setHours(hour, 0, 0, 0);
+    return date.toISOString();
+  };
+
+  // Enhanced event creation with validation and clean logging
   const handleCreateEvent = async () => {
-    if (!eventForm.title.trim() || !eventForm.description.trim()) {
-      Alert.alert('Error', 'Title and description are required');
-      return;
+    console.log('🎪 Creating new event...');
+    
+    // Comprehensive validation
+    const validationErrors = [];
+    
+    if (!eventForm.title.trim()) {
+      validationErrors.push('Event title is required');
+    } else if (eventForm.title.trim().length < 3) {
+      validationErrors.push('Event title must be at least 3 characters');
     }
 
-    if (!eventForm.start_time || !eventForm.end_time) {
-      Alert.alert('Error', 'Please set start and end times');
+    if (!eventForm.description.trim()) {
+      validationErrors.push('Event description is required');
+    } else if (eventForm.description.trim().length < 10) {
+      validationErrors.push('Event description must be at least 10 characters');
+    }
+
+    if (!eventForm.start_time) {
+      validationErrors.push('Please set a start time using the quick date buttons');
+    }
+
+    if (!eventForm.end_time) {
+      validationErrors.push('Please set an end time using the quick date buttons');
+    }
+
+    // Check if end time is after start time
+    if (eventForm.start_time && eventForm.end_time) {
+      const startDate = new Date(eventForm.start_time);
+      const endDate = new Date(eventForm.end_time);
+      if (endDate <= startDate) {
+        validationErrors.push('End time must be after start time');
+      }
+    }
+
+    if (validationErrors.length > 0) {
+      Alert.alert('Validation Error', validationErrors.join('\n'));
       return;
     }
 
     try {
-      // Create event data
+      // Create event data with proper formatting
       const eventData = {
         title: eventForm.title.trim(),
         description: eventForm.description.trim(),
         start_time: eventForm.start_time,
         end_time: eventForm.end_time,
-        location_description: eventForm.location_description.trim(),
-        category: eventForm.category,
-        is_private: eventForm.is_private,
-        organizing_group_id: eventForm.organizing_group_id || null,
-        group_members_only: eventForm.group_members_only
+        category: eventForm.category || 'other',
+        is_private: Boolean(eventForm.is_private),
+        group_members_only: Boolean(eventForm.group_members_only)
       };
+
+      // Only include location_description if it has content
+      if (eventForm.location_description.trim()) {
+        eventData.location_description = eventForm.location_description.trim();
+      }
+
+      // Only include organizing_group_id if it's set and valid
+      if (eventForm.organizing_group_id && eventForm.organizing_group_id.trim()) {
+        const groupId = parseInt(eventForm.organizing_group_id);
+        if (!isNaN(groupId) && groupId > 0) {
+          eventData.organizing_group_id = groupId;
+        }
+      }
 
       const response = await ApiService.createEvent(eventData);
 
-      if (response.success) {
-        Alert.alert('Success', 'Event created successfully!');
+      if (response && response.success) {
+        Alert.alert('Success! 🎉', 'Event created successfully!');
         setShowCreateEvent(false);
+        
+        // Reset form to initial state
         setEventForm({
-          title: '', description: '', start_time: '', end_time: '',
-          location_description: '', organizing_group_id: '', category: 'other',
-          is_private: false, group_members_only: false
+          title: '', 
+          description: '', 
+          start_time: '', 
+          end_time: '',
+          location_description: '', 
+          organizing_group_id: '', 
+          category: 'other',
+          is_private: false, 
+          group_members_only: false
         });
+        
+        // Reload data to show new event
         await loadOrganizerData();
       } else {
-        Alert.alert('Error', response.message || 'Failed to create event');
+        Alert.alert('Creation Failed', response?.message || 'Failed to create event. Please try again.');
       }
     } catch (error) {
-      console.error('Create event error:', error);
-      Alert.alert('Error', 'Failed to create event');
+      console.error('Event creation error:', error);
+      const errorMessage = error.message || 'Failed to create event. Please check your connection and try again.';
+      Alert.alert('Error', errorMessage);
     }
   };
 
@@ -157,12 +217,13 @@ const OrganizerScreen = ({ navigation }) => {
     });
   };
 
-  const generateDateString = (daysFromNow, hour = 14) => {
-    const date = new Date();
-    date.setDate(date.getDate() + daysFromNow);
-    date.setHours(hour, 0, 0, 0);
-    return date.toISOString();
-};
+  // Check if form is valid for submission
+  const isFormValid = () => {
+    return eventForm.title.trim().length >= 3 && 
+           eventForm.description.trim().length >= 10 && 
+           eventForm.start_time && 
+           eventForm.end_time;
+  };
 
   if (loading) {
     return (
@@ -193,7 +254,7 @@ const OrganizerScreen = ({ navigation }) => {
         </View>
       </View>
 
-      {/* Create New Group */}
+      {/* Create New Group Card */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Create a New Group</Text>
         <Text style={styles.cardDesc}>
@@ -205,7 +266,7 @@ const OrganizerScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Create New Event */}
+      {/* Create New Event Card */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Create New Event</Text>
         <Text style={styles.cardDesc}>
@@ -217,7 +278,7 @@ const OrganizerScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Manage Events */}
+      {/* Manage Events Card */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Your Events ({userEvents.length})</Text>
         <Text style={styles.cardDesc}>
@@ -279,64 +340,184 @@ const OrganizerScreen = ({ navigation }) => {
         </View>
       </Modal>
 
-      {/* Create Event Modal */}
+      {/* Enhanced Create Event Modal with Validation */}
       <Modal visible={showCreateEvent} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <ScrollView style={styles.modalScrollContent}>
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>Create New Event</Text>
               
-              <TextInput
-                style={styles.input}
-                placeholder="Event Title"
-                value={eventForm.title}
-                onChangeText={(text) => setEventForm({...eventForm, title: text})}
-              />
+              {/* Event Title with validation */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Event Title *</Text>
+                <TextInput
+                  style={[
+                    styles.input, 
+                    eventForm.title.length > 0 && eventForm.title.length < 3 && styles.inputError,
+                    eventForm.title.length >= 3 && styles.inputSuccess
+                  ]}
+                  placeholder="Event Title (minimum 3 characters)"
+                  value={eventForm.title}
+                  onChangeText={(text) => setEventForm({...eventForm, title: text})}
+                  maxLength={100}
+                />
+                <Text style={[
+                  styles.characterCount,
+                  eventForm.title.length < 3 && eventForm.title.length > 0 && styles.characterCountError,
+                  eventForm.title.length >= 3 && styles.characterCountSuccess
+                ]}>
+                  {eventForm.title.length}/100 characters (minimum 3)
+                </Text>
+              </View>
               
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                placeholder="Event Description"
-                multiline
-                value={eventForm.description}
-                onChangeText={(text) => setEventForm({...eventForm, description: text})}
-              />
+              {/* Event Description with validation */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Event Description *</Text>
+                <TextInput
+                  style={[
+                    styles.input, 
+                    styles.textArea,
+                    eventForm.description.length > 0 && eventForm.description.length < 10 && styles.inputError,
+                    eventForm.description.length >= 10 && styles.inputSuccess
+                  ]}
+                  placeholder="Describe your event (minimum 10 characters)"
+                  multiline
+                  value={eventForm.description}
+                  onChangeText={(text) => setEventForm({...eventForm, description: text})}
+                  maxLength={5000}
+                />
+                <Text style={[
+                  styles.characterCount,
+                  eventForm.description.length < 10 && eventForm.description.length > 0 && styles.characterCountError,
+                  eventForm.description.length >= 10 && styles.characterCountSuccess
+                ]}>
+                  {eventForm.description.length}/5000 characters (minimum 10)
+                </Text>
+              </View>
 
-              <TextInput
-                style={styles.input}
-                placeholder="Location (e.g., City Hall Steps)"
-                value={eventForm.location_description}
-                onChangeText={(text) => setEventForm({...eventForm, location_description: text})}
-              />
+              {/* Location field */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Location (Optional)</Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    eventForm.location_description.length > 500 && styles.inputError
+                  ]}
+                  placeholder="Location (e.g., City Hall Steps)"
+                  value={eventForm.location_description}
+                  onChangeText={(text) => setEventForm({...eventForm, location_description: text})}
+                  maxLength={500}
+                />
+                <Text style={[
+                  styles.characterCount,
+                  eventForm.location_description.length > 500 && styles.characterCountError
+                ]}>
+                  {eventForm.location_description.length}/500 characters
+                </Text>
+              </View>
 
-              {/* Quick date buttons */}
+              {/* Validation Summary */}
+              <View style={styles.validationSummary}>
+                <Text style={styles.validationTitle}>Form Requirements:</Text>
+                
+                <View style={styles.validationItem}>
+                  <Ionicons 
+                    name={eventForm.title.length >= 3 ? "checkmark-circle" : "close-circle"} 
+                    size={16} 
+                    color={eventForm.title.length >= 3 ? "#4CAF50" : "#F44336"} 
+                  />
+                  <Text style={[
+                    styles.validationText,
+                    eventForm.title.length >= 3 ? styles.validationSuccess : styles.validationError
+                  ]}>
+                    Title: {eventForm.title.length >= 3 ? 'Valid' : 'Too short (min 3 chars)'}
+                  </Text>
+                </View>
+                
+                <View style={styles.validationItem}>
+                  <Ionicons 
+                    name={eventForm.description.length >= 10 ? "checkmark-circle" : "close-circle"} 
+                    size={16} 
+                    color={eventForm.description.length >= 10 ? "#4CAF50" : "#F44336"} 
+                  />
+                  <Text style={[
+                    styles.validationText,
+                    eventForm.description.length >= 10 ? styles.validationSuccess : styles.validationError
+                  ]}>
+                    Description: {eventForm.description.length >= 10 ? 'Valid' : 'Too short (min 10 chars)'}
+                  </Text>
+                </View>
+                
+                <View style={styles.validationItem}>
+                  <Ionicons 
+                    name={eventForm.start_time ? "checkmark-circle" : "close-circle"} 
+                    size={16} 
+                    color={eventForm.start_time ? "#4CAF50" : "#F44336"} 
+                  />
+                  <Text style={[
+                    styles.validationText,
+                    eventForm.start_time ? styles.validationSuccess : styles.validationError
+                  ]}>
+                    Dates: {eventForm.start_time ? 'Set' : 'Use quick date buttons below'}
+                  </Text>
+                </View>
+              </View>
+
+
+
+              {/* Quick Date Selection */}
               <Text style={styles.inputLabel}>Quick Date Options:</Text>
               <View style={styles.quickDateRow}>
                 <TouchableOpacity 
                   style={styles.quickDateButton}
-                  onPress={() => setEventForm({
-                    ...eventForm,
-                    start_time: generateDateString(7),
-                    end_time: generateDateString(7, 18)
-                  })}
+                  onPress={() => {
+                    const startTime = generateDateString(7, 14);  // 7 days, 2 PM
+                    const endTime = generateDateString(7, 18);    // 7 days, 6 PM
+                    setEventForm({
+                      ...eventForm,
+                      start_time: startTime,
+                      end_time: endTime
+                    });
+                  }}
                 >
                   <Text style={styles.quickDateText}>Next Week</Text>
                 </TouchableOpacity>
+                
                 <TouchableOpacity 
                   style={styles.quickDateButton}
-                  onPress={() => setEventForm({
-                    ...eventForm,
-                    start_time: generateDateString(14),
-                    end_time: generateDateString(14, 18)
-                  })}
+                  onPress={() => {
+                    const startTime = generateDateString(14, 14);  // 14 days, 2 PM
+                    const endTime = generateDateString(14, 18);    // 14 days, 6 PM
+                    setEventForm({
+                      ...eventForm,
+                      start_time: startTime,
+                      end_time: endTime
+                    });
+                  }}
                 >
                   <Text style={styles.quickDateText}>2 Weeks</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={styles.quickDateButton}
+                  onPress={() => {
+                    const startTime = generateDateString(30, 14);  // 30 days, 2 PM
+                    const endTime = generateDateString(30, 18);    // 30 days, 6 PM
+                    setEventForm({
+                      ...eventForm,
+                      start_time: startTime,
+                      end_time: endTime
+                    });
+                  }}
+                >
+                  <Text style={styles.quickDateText}>Next Month</Text>
                 </TouchableOpacity>
               </View>
 
               {/* Category Selection */}
               <Text style={styles.inputLabel}>Event Category:</Text>
               <View style={styles.categoryRow}>
-                {['rally', 'meeting', 'training', 'action'].map((cat) => (
+                {['rally', 'meeting', 'training', 'action', 'fundraiser', 'social'].map((cat) => (
                   <TouchableOpacity
                     key={cat}
                     style={[
@@ -355,45 +536,111 @@ const OrganizerScreen = ({ navigation }) => {
                 ))}
               </View>
 
-              {/* Group Selection */}
-              {userGroups.length > 0 && (
-                <>
-                  <Text style={styles.inputLabel}>Organizing Group (Optional):</Text>
-                  <View style={styles.groupSelection}>
+              {/* Group Selection - Always Show */}
+              <Text style={styles.inputLabel}>Organizing Group (Optional):</Text>
+              <View style={styles.groupSelection}>
+                <TouchableOpacity
+                  style={[
+                    styles.groupOption,
+                    !eventForm.organizing_group_id && styles.groupSelected
+                  ]}
+                  onPress={() => setEventForm({...eventForm, organizing_group_id: ''})}
+                >
+                  <Ionicons name="person-outline" size={16} color="#5B5FEF" />
+                  <Text style={styles.groupOptionText}>Personal Event</Text>
+                </TouchableOpacity>
+                
+                {userGroups.length > 0 ? (
+                  userGroups.map((group) => (
                     <TouchableOpacity
+                      key={group.id}
                       style={[
                         styles.groupOption,
-                        !eventForm.organizing_group_id && styles.groupSelected
+                        eventForm.organizing_group_id === group.id.toString() && styles.groupSelected
                       ]}
-                      onPress={() => setEventForm({...eventForm, organizing_group_id: ''})}
+                      onPress={() => setEventForm({...eventForm, organizing_group_id: group.id.toString()})}
                     >
-                      <Text style={styles.groupOptionText}>Personal Event</Text>
+                      <Ionicons name="people-outline" size={16} color="#5B5FEF" />
+                      <Text style={styles.groupOptionText}>{group.name}</Text>
+                      <Text style={styles.groupRoleText}>({group.role})</Text>
                     </TouchableOpacity>
-                    {userGroups.map((group) => (
-                      <TouchableOpacity
-                        key={group.id}
-                        style={[
-                          styles.groupOption,
-                          eventForm.organizing_group_id === group.id.toString() && styles.groupSelected
-                        ]}
-                        onPress={() => setEventForm({...eventForm, organizing_group_id: group.id.toString()})}
-                      >
-                        <Text style={styles.groupOptionText}>{group.name}</Text>
-                      </TouchableOpacity>
-                    ))}
+                  ))
+                ) : (
+                  <View style={styles.noGroupsContainer}>
+                    <Ionicons name="information-circle-outline" size={16} color="#999" />
+                    <Text style={styles.noGroupsText}>
+                      You don't lead any groups yet. Create a group first to organize group events.
+                    </Text>
                   </View>
-                </>
+                )}
+                
+                {/* Quick Create Group Button */}
+                <TouchableOpacity
+                  style={styles.quickCreateGroupButton}
+                  onPress={() => {
+                    setShowCreateEvent(false);
+                    setTimeout(() => setShowCreateGroup(true), 300);
+                  }}
+                >
+                  <Ionicons name="add-circle-outline" size={16} color="#5B5FEF" />
+                  <Text style={styles.quickCreateGroupText}>Create New Group</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Group Members Only Option - Only show if group is selected */}
+              {eventForm.organizing_group_id && (
+                <View style={styles.checkboxRow}>
+                  <TouchableOpacity 
+                    style={styles.checkbox}
+                    onPress={() => setEventForm({...eventForm, group_members_only: !eventForm.group_members_only})}
+                  >
+                    <Ionicons 
+                      name={eventForm.group_members_only ? "checkbox-outline" : "square-outline"} 
+                      size={20} 
+                      color="#5B5FEF" 
+                    />
+                    <Text style={styles.checkboxLabel}>Restrict to Group Members Only</Text>
+                  </TouchableOpacity>
+                </View>
               )}
 
+              {/* Modal Action Buttons */}
               <View style={styles.modalButtons}>
                 <TouchableOpacity 
                   style={styles.cancelButton} 
-                  onPress={() => setShowCreateEvent(false)}
+                  onPress={() => {
+                    setShowCreateEvent(false);
+                    // Reset form when canceling
+                    setEventForm({
+                      title: '', 
+                      description: '', 
+                      start_time: '', 
+                      end_time: '',
+                      location_description: '', 
+                      organizing_group_id: '', 
+                      category: 'other',
+                      is_private: false, 
+                      group_members_only: false
+                    });
+                  }}
                 >
                   <Text style={styles.cancelText}>Cancel</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.createButton} onPress={handleCreateEvent}>
-                  <Text style={styles.createText}>Create Event</Text>
+                
+                <TouchableOpacity 
+                  style={[
+                    styles.createButton,
+                    !isFormValid() && styles.createButtonDisabled
+                  ]} 
+                  onPress={handleCreateEvent}
+                  disabled={!isFormValid()}
+                >
+                  <Text style={[
+                    styles.createText,
+                    !isFormValid() && styles.createTextDisabled
+                  ]}>
+                    Create Event
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -437,10 +684,12 @@ const OrganizerScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  // Base styles
   container: { padding: 16, backgroundColor: '#F5F5F5', flex: 1 },
   title: { fontSize: 22, fontWeight: 'bold', color: '#5B5FEF', marginBottom: 4 },
   subtitle: { fontSize: 14, color: '#666', marginBottom: 16 },
   
+  // Stats section
   statsContainer: {
     flexDirection: 'row',
     backgroundColor: '#fff',
@@ -454,6 +703,7 @@ const styles = StyleSheet.create({
   statNumber: { fontSize: 20, fontWeight: 'bold', color: '#5B5FEF' },
   statLabel: { fontSize: 12, color: '#666', marginTop: 4 },
   
+  // Card styles
   card: {
     backgroundColor: '#fff',
     borderRadius: 10,
@@ -496,12 +746,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   
+  // Enhanced input styles
+  inputContainer: {
+    marginBottom: 16,
+  },
   input: {
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 6,
     padding: 12,
-    marginBottom: 12,
+    marginBottom: 4,
     fontSize: 14,
   },
   textArea: {
@@ -515,6 +769,58 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   
+  // Character count and validation styles
+  characterCount: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'right',
+  },
+  characterCountError: {
+    color: '#F44336',
+  },
+  characterCountSuccess: {
+    color: '#4CAF50',
+  },
+  inputError: {
+    borderColor: '#F44336',
+    borderWidth: 2,
+  },
+  inputSuccess: {
+    borderColor: '#4CAF50',
+    borderWidth: 1,
+  },
+  
+  // Validation summary styles
+  validationSummary: {
+    backgroundColor: '#F5F5F5',
+    padding: 12,
+    borderRadius: 8,
+    marginVertical: 10,
+  },
+  validationTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: '#333',
+  },
+  validationItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  validationText: {
+    fontSize: 12,
+    marginLeft: 8,
+  },
+  validationSuccess: {
+    color: '#4CAF50',
+  },
+  validationError: {
+    color: '#F44336',
+  },
+
+  
+  // Checkbox styles
   checkboxRow: {
     flexDirection: 'row',
     marginBottom: 16,
@@ -528,6 +834,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   
+  // Quick date button styles
   quickDateRow: {
     flexDirection: 'row',
     gap: 8,
@@ -538,12 +845,16 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 6,
+    flex: 1,
+    alignItems: 'center',
   },
   quickDateText: {
     color: '#5B5FEF',
     fontSize: 12,
+    fontWeight: '500',
   },
   
+  // Category selection styles
   categoryRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -567,10 +878,13 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   
+  // Group selection styles
   groupSelection: {
     marginBottom: 16,
   },
   groupOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 12,
     borderWidth: 1,
     borderColor: '#ddd',
@@ -583,8 +897,48 @@ const styles = StyleSheet.create({
   },
   groupOptionText: {
     fontSize: 14,
+    marginLeft: 8,
+    flex: 1,
+  },
+  groupRoleText: {
+    fontSize: 12,
+    color: '#666',
+    fontStyle: 'italic',
+  },
+  noGroupsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 6,
+    marginBottom: 8,
+  },
+  noGroupsText: {
+    fontSize: 12,
+    color: '#666',
+    marginLeft: 8,
+    flex: 1,
+    lineHeight: 16,
+  },
+  quickCreateGroupButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#5B5FEF',
+    borderStyle: 'dashed',
+    borderRadius: 6,
+    backgroundColor: '#F8F9FF',
+  },
+  quickCreateGroupText: {
+    fontSize: 12,
+    color: '#5B5FEF',
+    marginLeft: 6,
+    fontWeight: '500',
   },
   
+  // Modal button styles
   modalButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -607,6 +961,9 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     alignItems: 'center',
   },
+  createButtonDisabled: {
+    backgroundColor: '#CCC',
+  },
   cancelText: {
     color: '#666',
   },
@@ -614,6 +971,11 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
   },
+  createTextDisabled: {
+    color: '#999',
+  },
+  
+  // Close button styles
   closeButton: {
     backgroundColor: '#5B5FEF',
     padding: 12,
@@ -626,6 +988,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   
+  // Events list styles
   eventsList: {
     maxHeight: 200,
     marginBottom: 16,
@@ -636,10 +999,12 @@ const styles = StyleSheet.create({
     borderColor: '#eee',
     borderRadius: 6,
     marginBottom: 8,
+    backgroundColor: '#F9F9F9',
   },
   eventItemTitle: {
     fontSize: 14,
     fontWeight: 'bold',
+    color: '#333',
   },
   eventItemDate: {
     fontSize: 12,

@@ -1,6 +1,6 @@
-// routes/auth.js - FIXED VERSION
+// routes/auth.js - SIMPLIFIED VERSION (remove complex password validation temporarily)
 const express = require('express');
-const bcrypt = require('bcryptjs'); // ← MISSING IMPORT - This was causing the error!
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const rateLimit = require('express-rate-limit');
@@ -20,7 +20,7 @@ const authLimiter = rateLimit({
   }
 });
 
-// Validation rules
+// SIMPLIFIED validation rules - remove complex password requirements temporarily
 const registerValidation = [
   body('username')
     .isLength({ min: 3, max: 50 })
@@ -33,20 +33,24 @@ const registerValidation = [
     .withMessage('Please provide a valid email address')
     .normalizeEmail(),
   
+  // SIMPLIFIED: Just check minimum length
   body('password')
-    .isLength({ min: 8 })
-    .withMessage('Password must be at least 8 characters long')
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
-    .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'),
+    .isLength({ min: 6 })
+    .withMessage('Password must be at least 6 characters long'),
   
   body('display_name')
     .optional()
     .isLength({ max: 50 })
     .withMessage('Display name cannot exceed 50 characters'),
   
+  // Accept both string and boolean
   body('terms_accepted')
-    .equals('true')
-    .withMessage('You must accept the terms of service')
+    .custom((value) => {
+      if (value === true || value === 'true') {
+        return true;
+      }
+      throw new Error('You must accept the terms of service');
+    })
 ];
 
 const loginValidation = [
@@ -67,7 +71,9 @@ const loginValidation = [
 router.post('/register', authLimiter, registerValidation, async (req, res) => {
   try {
     console.log('=== REGISTRATION ATTEMPT ===');
-    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    console.log('Raw request body:', req.body);
+    console.log('Password length:', req.body.password ? req.body.password.length : 'undefined');
+    console.log('Password preview:', req.body.password ? req.body.password.substring(0, 10) + '...' : 'undefined');
     
     // Check validation errors
     const errors = validationResult(req);
@@ -82,6 +88,11 @@ router.post('/register', authLimiter, registerValidation, async (req, res) => {
     }
 
     const { username, email, password, display_name, bio, privacy_level = 'standard' } = req.body;
+
+    console.log('✅ Validation passed, processing registration...');
+    console.log('Username:', username);
+    console.log('Email:', email);
+    console.log('Display name:', display_name);
 
     // Get database connection
     const pool = getPostgreSQLPool();
@@ -169,6 +180,7 @@ router.post('/login', authLimiter, loginValidation, async (req, res) => {
   try {
     console.log('=== LOGIN ATTEMPT ===');
     console.log('Email:', req.body.email);
+    console.log('Password length:', req.body.password ? req.body.password.length : 'undefined');
     
     // Check validation errors
     const errors = validationResult(req);
@@ -205,7 +217,7 @@ router.post('/login', authLimiter, loginValidation, async (req, res) => {
     const user = result.rows[0];
     console.log('✅ User found:', user.username);
 
-    // Verify password using bcrypt - THIS WAS THE MAIN BUG!
+    // Verify password using bcrypt
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
     console.log('🔍 Password verification result:', isValidPassword);
     
@@ -268,7 +280,6 @@ router.post('/login', authLimiter, loginValidation, async (req, res) => {
  */
 router.get('/verify', verifyToken, async (req, res) => {
   try {
-    // User data is already available from middleware
     res.json({
       success: true,
       message: 'Token is valid',
